@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: tp_final
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5442:5432"
+    volumes:
+      - postgres_data_tp_final:/var/lib/postgresql/data
+
+volumes:
+  postgres_data_tp_final:
