@@ -1,8 +1,3 @@
-INSERT INTO roles (name) VALUES
-    ('ROLE_STUDENT'),
-    ('ROLE_TEACHER'),
-    ('ROLE_ADMIN');
-
 INSERT INTO equipments (name) VALUES ('Écran 4K'),
     ('Tableau Blanc'),
     ('Vidéoprojecteur'),
@@ -18,13 +13,13 @@ INSERT INTO users (email, password, first_name, last_name, is_active) VALUES
     ('etudiant.thomas@ekod.school', '$2a$10$7R0ZfD7325W7hM6Jk9eUeu08OByGexH8YhI6236ZlWqgEmsH6hR0.', 'Thomas', 'Martin', true),
     ('etudiant.marie@ekod.school', '$2a$10$7R0ZfD7325W7hM6Jk9eUeu08OByGexH8YhI6236ZlWqgEmsH6hR0.', 'Marie', 'Bernard', true);
 
-INSERT INTO user_roles (user_id, role_id) VALUES
-    (1, 3),
-    (2, 3),
-    (3, 2),
-    (4, 2),
-    (5, 1),
-    (6, 1);
+INSERT INTO user_roles (user_id, role) VALUES
+    (1, 'ADMIN'),
+    (2, 'ADMIN'),
+    (3, 'TEACHER'),
+    (4, 'TEACHER'),
+    (5, 'STUDENT'),
+    (6, 'STUDENT');
 
 INSERT INTO rooms (name, capacity, description, is_available, image_url) VALUES
     ('Amphi A', 50, 'Grand amphithéâtre principal situé au rez-de-chaussée pour les cours magistraux.', true, 'https://images.ekod.school/rooms/amphi-a.jpg'),
