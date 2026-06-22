@@ -1,0 +1,29 @@
+meta {
+  name: Register Invalid Email
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "firstName": "X",
+    "lastName": "Y",
+    "email": "not-an-email",
+    "password": "Password123!"
+  }
+}
+
+tests {
+  test("status 400 validation", function() {
+    expect(res.getStatus()).to.equal(400);
+  });
+  test("errors field present", function() {
+    expect(res.getBody().errors).to.exist;
+  });
+}

@@ -1,0 +1,37 @@
+meta {
+  name: Create Booking End Before Start
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/bookings
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+script:pre-request {
+  const end = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const start = new Date(end.getTime() + 60 * 60 * 1000);
+  bru.setVar("invStart", start.toISOString().substring(0, 19));
+  bru.setVar("invEnd", end.toISOString().substring(0, 19));
+}
+
+body:json {
+  {
+    "roomId": {{roomId}},
+    "startTime": "{{invStart}}",
+    "endTime": "{{invEnd}}",
+    "purpose": "Fin avant début"
+  }
+}
+
+tests {
+  test("status 400", function() {
+    expect(res.getStatus()).to.equal(400);
+  });
+}

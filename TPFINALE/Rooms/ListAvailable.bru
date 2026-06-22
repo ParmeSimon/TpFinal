@@ -1,0 +1,25 @@
+meta {
+  name: List Available Rooms
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/rooms/available
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("all available true", function() {
+    const rooms = res.getBody();
+    rooms.forEach(r => expect(r.available).to.equal(true));
+  });
+}

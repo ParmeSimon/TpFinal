@@ -1,0 +1,26 @@
+meta {
+  name: Create Booking No Auth
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/bookings
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "roomId": {{roomId}},
+    "startTime": "2099-01-01T10:00:00",
+    "endTime": "2099-01-01T11:00:00",
+    "purpose": "no token"
+  }
+}
+
+tests {
+  test("status 401 or 403", function() {
+    expect([401, 403]).to.include(res.getStatus());
+  });
+}

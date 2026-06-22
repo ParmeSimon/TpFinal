@@ -1,0 +1,35 @@
+meta {
+  name: Create Room Invalid Capacity
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/rooms
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminAccessToken}}
+}
+
+body:json {
+  {
+    "name": "Invalid Capacity Room",
+    "capacity": 0,
+    "description": "Capacité 0",
+    "available": true,
+    "imageUrl": null,
+    "equipmentIds": []
+  }
+}
+
+tests {
+  test("status 400 validation", function() {
+    expect(res.getStatus()).to.equal(400);
+  });
+  test("capacity error", function() {
+    expect(JSON.stringify(res.getBody())).to.include("capacity");
+  });
+}

@@ -1,0 +1,24 @@
+meta {
+  name: List All Users (Admin)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/users
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminAccessToken}}
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("array of users", function() {
+    expect(res.getBody()).to.be.an("array");
+  });
+}

@@ -1,0 +1,21 @@
+meta {
+  name: Delete Room (Admin)
+  type: http
+  seq: 99
+}
+
+delete {
+  url: {{baseUrl}}/api/rooms/{{roomId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminAccessToken}}
+}
+
+tests {
+  test("status 204", function() {
+    expect(res.getStatus()).to.equal(204);
+  });
+}
