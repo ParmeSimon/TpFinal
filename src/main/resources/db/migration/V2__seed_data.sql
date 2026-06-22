@@ -1,7 +1,6 @@
 INSERT INTO equipments (name) VALUES ('Écran 4K'),
     ('Tableau Blanc'),
     ('Vidéoprojecteur'),
-    ('Tableau Blanc'),
     ('Système de Visio');
 
 
@@ -30,7 +29,7 @@ INSERT INTO rooms (name, capacity, description, is_available, image_url) VALUES
 
 INSERT INTO room_equipments (room_id, equipment_id) VALUES
     (1, 3),
-    (1, 4),
+    (1, 2),
     (2, 1),
     (2, 2),
     (3, 3),
