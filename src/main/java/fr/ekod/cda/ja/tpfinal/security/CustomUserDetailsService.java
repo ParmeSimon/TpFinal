@@ -1,7 +1,7 @@
 package fr.ekod.cda.ja.tpfinal.security;
 
-import fr.ekod.cda.ja.tp7.entity.User;
-import fr.ekod.cda.ja.tp7.repository.UserRepository;
+import fr.ekod.cda.ja.tpfinal.entity.User;
+import fr.ekod.cda.ja.tpfinal.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
