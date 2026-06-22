@@ -1,6 +1,7 @@
 package fr.ekod.cda.ja.tpfinal.dto.auth;
 
-import fr.ekod.cda.ja.tp7.entity.Role;
+import fr.ekod.cda.ja.tpfinal.entity.Role;
+
 
 public record UserDTO(
         Integer id,
