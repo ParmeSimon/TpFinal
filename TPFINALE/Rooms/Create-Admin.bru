@@ -1,0 +1,44 @@
+meta {
+  name: Create Room (Admin)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/rooms
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminAccessToken}}
+}
+
+body:json {
+  {
+    "name": "Salle Bruno Test",
+    "capacity": 12,
+    "description": "Salle créée depuis Bruno",
+    "available": true,
+    "imageUrl": "https://example.com/img.jpg",
+    "equipmentIds": []
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setEnvVar("roomId", res.getBody().id);
+  }
+}
+
+tests {
+  test("status 201", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+  test("name returned", function() {
+    expect(res.getBody().name).to.equal("Salle Bruno Test");
+  });
+  test("id stored", function() {
+    expect(res.getBody().id).to.be.a("number");
+  });
+}

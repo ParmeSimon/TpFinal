@@ -1,0 +1,24 @@
+meta {
+  name: List All Bookings (Admin)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/bookings
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminAccessToken}}
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("array", function() {
+    expect(res.getBody()).to.be.an("array");
+  });
+}

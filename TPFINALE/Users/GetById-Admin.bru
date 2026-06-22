@@ -1,0 +1,24 @@
+meta {
+  name: Get User By Id (Admin)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/users/{{userId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminAccessToken}}
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("id matches", function() {
+    expect(String(res.getBody().id)).to.equal(bru.getEnvVar("userId"));
+  });
+}

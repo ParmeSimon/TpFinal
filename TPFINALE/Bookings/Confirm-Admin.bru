@@ -1,0 +1,24 @@
+meta {
+  name: Confirm Booking (Admin)
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/api/bookings/{{bookingId}}/confirm
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminAccessToken}}
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("status CONFIRMED", function() {
+    expect(res.getBody().status).to.equal("CONFIRMED");
+  });
+}

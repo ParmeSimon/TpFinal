@@ -1,0 +1,32 @@
+meta {
+  name: Create Room Missing Name
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/rooms
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminAccessToken}}
+}
+
+body:json {
+  {
+    "name": "",
+    "capacity": 5,
+    "description": "no name",
+    "available": true,
+    "imageUrl": null,
+    "equipmentIds": []
+  }
+}
+
+tests {
+  test("status 400", function() {
+    expect(res.getStatus()).to.equal(400);
+  });
+}

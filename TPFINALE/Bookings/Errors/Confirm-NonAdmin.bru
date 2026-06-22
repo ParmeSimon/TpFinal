@@ -1,0 +1,21 @@
+meta {
+  name: Confirm Booking As Student Forbidden
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{baseUrl}}/api/bookings/{{bookingId}}/confirm
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+tests {
+  test("status 403", function() {
+    expect(res.getStatus()).to.equal(403);
+  });
+}

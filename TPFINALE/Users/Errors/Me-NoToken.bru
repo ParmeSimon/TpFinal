@@ -1,0 +1,17 @@
+meta {
+  name: Me No Token
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/users/me
+  body: none
+  auth: none
+}
+
+tests {
+  test("status 401 or 403", function() {
+    expect([401, 403]).to.include(res.getStatus());
+  });
+}
