@@ -20,6 +20,20 @@ export default function Header({ admin = false }: { admin?: boolean }) {
       <nav className="ek-nav">
         {admin ? (
           <>
+            <button
+              type="button"
+              className="nav-back"
+              onClick={() => nav('/rooms')}
+              title="Revenir à l'espace réservation"
+              style={{ background: 'none', border: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 9, fontFamily: 'Montserrat', fontWeight: 700, fontSize: 14, color: 'var(--navy)' }}
+            >
+              <span style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--red)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(251,45,28,.3)' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 12H5M5 12l7 7M5 12l7-7" />
+                </svg>
+              </span>
+              Espace réservation
+            </button>
             <NavLink to="/admin/bookings" className={({isActive}) => isActive ? 'active' : ''}>Réservations</NavLink>
             <NavLink to="/admin/rooms" className={({isActive}) => isActive ? 'active' : ''}>Salles</NavLink>
           </>
