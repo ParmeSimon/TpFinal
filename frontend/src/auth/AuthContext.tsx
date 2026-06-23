@@ -25,6 +25,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const u = await me()
       setUser(u)
     } catch {
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
       setUser(null)
     } finally {
       setLoading(false)

@@ -13,10 +13,15 @@ api.interceptors.request.use((cfg) => {
 api.interceptors.response.use(
   (r) => r,
   (err) => {
-    if (err.response?.status === 401) {
+    const status = err.response?.status
+    const url: string = err.config?.url ?? ''
+    // 401 = token absent/invalide. 403 = Spring renvoie ça aussi quand le filtre
+    // JWT n'a pas pu peupler la SecurityContext (token expiré silencieusement).
+    // Sur ces statuts pour un endpoint protégé, on purge la session locale.
+    if ((status === 401 || status === 403) && !url.startsWith('/auth/') && !url.startsWith('/public/')) {
       localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')
-      if (!window.location.pathname.startsWith('/login')) {
+      if (!window.location.pathname.startsWith('/login') && window.location.pathname !== '/') {
         window.location.href = '/login'
       }
     }

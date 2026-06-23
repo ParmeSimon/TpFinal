@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getRoom } from '../api/rooms'
 import type { RoomDTO } from '../api/types'
+import { roomPhotos } from '../api/roomImages'
 
 export default function RoomDetail() {
   const { id } = useParams()
   const nav = useNavigate()
   const [room, setRoom] = useState<RoomDTO | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  const [mainIdx, setMainIdx] = useState(0)
 
   useEffect(() => {
     if (!id) return
@@ -26,21 +28,46 @@ export default function RoomDetail() {
       <div style={{ padding: '34px 40px 44px', display: 'flex', gap: 36, flexWrap: 'wrap' }}>
         {/* gallery */}
         <div style={{ width: 620, flex: '1 1 360px', minWidth: 320 }}>
-          <div className="room-stripe-navy" style={{ height: 360, borderRadius: 10, position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 16, left: 16 }}>
-              {room.available
-                ? <span className="badge available">● Disponible aujourd'hui</span>
-                : <span className="badge occupied">● Occupée</span>}
-            </div>
-            {room.imageUrl && (
-              <img src={room.imageUrl} alt={room.name} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
-            <div className="room-stripe-navy" style={{ flex: 1, height: 86, borderRadius: 7 }} />
-            <div className="room-stripe-navy" style={{ flex: 1, height: 86, borderRadius: 7 }} />
-            <div className="room-stripe-navy" style={{ flex: 1, height: 86, borderRadius: 7 }} />
-          </div>
+          {(() => {
+            const photos = roomPhotos(room)
+            const main = photos[mainIdx] ?? photos[0]
+            const thumbs = photos.slice(0, 4)
+            return (
+              <>
+                <div style={{ height: 360, borderRadius: 10, position: 'relative', overflow: 'hidden', background: '#0B1A4E' }}>
+                  <img src={main} alt={room.name} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+                  <div style={{ position: 'absolute', top: 16, left: 16, zIndex: 1 }}>
+                    {room.available
+                      ? <span className="badge available">● Disponible aujourd'hui</span>
+                      : <span className="badge occupied">● Occupée</span>}
+                  </div>
+                </div>
+                {thumbs.length > 1 && (
+                  <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+                    {thumbs.map((p, i) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setMainIdx(i)}
+                        style={{
+                          flex: 1,
+                          height: 86,
+                          borderRadius: 7,
+                          border: i === mainIdx ? '2px solid var(--red)' : '2px solid transparent',
+                          backgroundImage: `url("${p}")`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          padding: 0,
+                          cursor: 'pointer',
+                        }}
+                        aria-label={`Photo ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )
+          })()}
         </div>
 
         {/* info */}
