@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { listRooms } from '../api/rooms'
+import { listAvailable, listRooms } from '../api/rooms'
 import type { RoomDTO } from '../api/types'
 import RoomCard from '../components/RoomCard'
+import { useAuth } from '../auth/AuthContext'
 
 export default function Catalogue() {
+  const { isAdmin } = useAuth()
   const [rooms, setRooms] = useState<RoomDTO[]>([])
   const [q, setQ] = useState('')
   const [minCap, setMinCap] = useState<number | ''>('')
@@ -12,11 +14,14 @@ export default function Catalogue() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    listRooms()
+    // Étudiants : seules les salles activées par l'admin sont visibles.
+    // Admin : voit tout pour pouvoir réactiver une salle désactivée.
+    const fetcher = isAdmin ? listRooms : listAvailable
+    fetcher()
       .then(setRooms)
       .catch(e => setErr(e.response?.data?.message || 'Erreur de chargement'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [isAdmin])
 
   const filtered = useMemo(() => {
     return rooms.filter(r => {

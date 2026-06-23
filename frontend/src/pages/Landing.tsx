@@ -1,8 +1,14 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import TopBar from '../components/TopBar'
 import Footer from '../components/Footer'
+import { getPublicStats, type PublicStats } from '../api/stats'
 
 export default function Landing() {
+  const [stats, setStats] = useState<PublicStats | null>(null)
+  useEffect(() => {
+    getPublicStats().then(setStats).catch(() => {})
+  }, [])
   return (
     <div className="screen">
       <TopBar />
@@ -59,14 +65,18 @@ export default function Landing() {
             Un seul espace pour réserver les salles informatiques, studios créa, labs réseau et l'amphithéâtre du campus. Les demandes sont validées par l'équipe pédagogique et la détection de conflits évite les doubles réservations.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 30, flex: 'none' }}>
+        <div style={{ display: 'flex', gap: 30, flex: 'none', flexWrap: 'wrap' }}>
           <div className="stat-tile" style={{ boxShadow: '9px 9px 0 rgba(8,17,56,.45)' }}>
-            <div className="num">18</div>
-            <div className="label" style={{ maxWidth: 120 }}>salles équipées au catalogue</div>
+            <div className="num">{stats ? stats.totalRooms : '—'}</div>
+            <div className="label" style={{ maxWidth: 130 }}>salles au catalogue</div>
           </div>
           <div className="stat-tile" style={{ boxShadow: '9px 9px 0 rgba(8,17,56,.45)' }}>
-            <div className="num">2 min</div>
-            <div className="label" style={{ maxWidth: 120 }}>pour réserver un créneau</div>
+            <div className="num">{stats ? stats.availableRooms : '—'}</div>
+            <div className="label" style={{ maxWidth: 130 }}>salles disponibles à la réservation</div>
+          </div>
+          <div className="stat-tile" style={{ boxShadow: '9px 9px 0 rgba(8,17,56,.45)' }}>
+            <div className="num">{stats ? stats.confirmedBookings : '—'}</div>
+            <div className="label" style={{ maxWidth: 130 }}>réservations confirmées</div>
           </div>
         </div>
       </div>
