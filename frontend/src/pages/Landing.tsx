@@ -2,12 +2,16 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import TopBar from '../components/TopBar'
 import Footer from '../components/Footer'
-import { getPublicStats, type PublicStats } from '../api/stats'
+import RoomCard from '../components/RoomCard'
+import { getPublicStats, getPublicRooms, type PublicStats } from '../api/stats'
+import type { RoomDTO } from '../api/types'
 
 export default function Landing() {
   const [stats, setStats] = useState<PublicStats | null>(null)
+  const [rooms, setRooms] = useState<RoomDTO[]>([])
   useEffect(() => {
     getPublicStats().then(setStats).catch(() => {})
+    getPublicRooms(3).then(setRooms).catch(() => {})
   }, [])
   return (
     <div className="screen">
@@ -111,35 +115,15 @@ export default function Landing() {
           <Link to="/rooms" style={{ fontSize: 13, color: 'var(--red)', fontWeight: 700 }}>Voir le catalogue ›</Link>
         </div>
         <div className="grid-3">
-          <div className="room-card">
-            <div className="cover room-stripe-navy">
-              <div className="top-left"><span className="badge available">● Disponible</span></div>
-              <div className="title">
-                <div className="name">Salle B204</div>
-                <div className="kind">Salle informatique · 24 pl.</div>
-              </div>
+          {rooms.length === 0 ? (
+            <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--grey-1)' }}>
+              Aucune salle à afficher pour le moment.
             </div>
-          </div>
-          <div className="room-card">
-            <div className="cover room-stripe-red">
-              <div className="top-left">
-                <span className="badge available" style={{ background: '#fff', color: 'var(--red)' }}>● Disponible</span>
-              </div>
-              <div className="title">
-                <div className="name">Amphi Turing</div>
-                <div className="kind">Amphithéâtre · 80 pl.</div>
-              </div>
-            </div>
-          </div>
-          <div className="room-card">
-            <div className="cover room-stripe-navy">
-              <div className="top-left"><span className="badge available">● Disponible</span></div>
-              <div className="title">
-                <div className="name">Studio D102</div>
-                <div className="kind">Studio Créa / UX · 18 pl.</div>
-              </div>
-            </div>
-          </div>
+          ) : (
+            rooms.map(r => (
+              <RoomCard key={r.id} room={r} variant={r.capacity >= 60 ? 'red' : 'navy'} />
+            ))
+          )}
         </div>
       </div>
 

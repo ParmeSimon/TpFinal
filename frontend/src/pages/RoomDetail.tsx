@@ -10,6 +10,7 @@ export default function RoomDetail() {
   const [room, setRoom] = useState<RoomDTO | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [mainIdx, setMainIdx] = useState(0)
+  const [reserving, setReserving] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -18,6 +19,29 @@ export default function RoomDetail() {
 
   if (err) return <div className="section-pad"><div className="error-msg">{err}</div></div>
   if (!room) return <div className="center-page"><span className="spinner" />&nbsp; Chargement…</div>
+
+  const isDisabled = !room.available
+  const isBooked = room.available && room.currentlyBooked
+  const statusLabel = reserving
+    ? 'Réservation en cours…'
+    : isDisabled
+      ? 'Indisponible'
+      : isBooked
+        ? 'Réservée'
+        : 'Libre'
+  const statusColor = reserving
+    ? 'var(--orange, #F59E0B)'
+    : isDisabled
+      ? 'var(--grey-1)'
+      : isBooked
+        ? 'var(--red)'
+        : 'var(--green)'
+
+  function goReserve() {
+    if (!room) return
+    setReserving(true)
+    setTimeout(() => nav(`/rooms/${room.id}/book`), 220)
+  }
 
   return (
     <>
@@ -37,9 +61,13 @@ export default function RoomDetail() {
                 <div style={{ height: 360, borderRadius: 10, position: 'relative', overflow: 'hidden', background: '#0B1A4E' }}>
                   <img src={main} alt={room.name} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
                   <div style={{ position: 'absolute', top: 16, left: 16, zIndex: 1 }}>
-                    {room.available
-                      ? <span className="badge available">● Disponible aujourd'hui</span>
-                      : <span className="badge occupied">● Occupée</span>}
+                    {reserving
+                      ? <span className="badge pending">● Réservation en cours…</span>
+                      : isDisabled
+                        ? <span className="badge occupied">● Indisponible</span>
+                        : isBooked
+                          ? <span className="badge booked">● Réservée</span>
+                          : <span className="badge available">● Disponible aujourd'hui</span>}
                   </div>
                 </div>
                 {thumbs.length > 1 && (
@@ -90,8 +118,8 @@ export default function RoomDetail() {
             </div>
             <div style={{ width: 1, background: 'var(--border)' }} />
             <div>
-              <div className="heading-mont" style={{ fontSize: 24, color: room.available ? 'var(--green)' : 'var(--grey-1)' }}>
-                {room.available ? 'Libre' : 'Occupée'}
+              <div className="heading-mont" style={{ fontSize: 24, color: statusColor, transition: 'color .2s' }}>
+                {statusLabel}
               </div>
               <div style={{ fontSize: 11.5, color: 'var(--grey-1)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>Statut actuel</div>
             </div>
@@ -114,12 +142,12 @@ export default function RoomDetail() {
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
             <button
               className="btn btn-red btn-lg"
-              disabled={!room.available}
-              onClick={() => nav(`/rooms/${room.id}/book`)}
+              disabled={isDisabled || reserving}
+              onClick={goReserve}
             >
-              Réserver cette salle
+              {reserving ? 'Réservation en cours…' : isBooked ? 'Voir d\'autres créneaux' : 'Réserver cette salle'}
             </button>
-            <button className="btn btn-ghost" onClick={() => nav(`/rooms/${room.id}/book`)}>Voir le planning</button>
+            <button className="btn btn-ghost" onClick={() => nav(`/rooms/${room.id}/book`)} disabled={reserving}>Voir le planning</button>
           </div>
         </div>
       </div>

@@ -23,6 +23,7 @@ export interface RoomDTO {
   capacity: number
   description: string
   available: boolean
+  currentlyBooked: boolean
   imageUrl: string
   equipments: string[]
   createdAt: string
