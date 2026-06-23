@@ -1,0 +1,58 @@
+export type Role = 'STUDENT' | 'TEACHER' | 'ADMIN'
+
+export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'REJECTED'
+
+export interface UserDTO {
+  id: number
+  firstName: string
+  lastName: string
+  email: string
+  roles: Role[]
+}
+
+export interface TokenResponse {
+  accessToken: string
+  refreshToken: string
+  tokenType: string
+  expiresIn: number
+}
+
+export interface RoomDTO {
+  id: number
+  name: string
+  capacity: number
+  description: string
+  available: boolean
+  imageUrl: string
+  equipments: string[]
+  createdAt: string
+}
+
+export interface CreateRoomDTO {
+  name: string
+  capacity: number
+  description: string
+  available: boolean
+  imageUrl: string
+  equipmentIds: number[]
+}
+
+export interface BookingDTO {
+  id: number
+  roomId: number
+  roomName: string
+  userId: number
+  userEmail: string
+  startTime: string
+  endTime: string
+  purpose: string
+  status: BookingStatus
+  createdAt: string
+}
+
+export interface CreateBookingDTO {
+  roomId: number
+  startTime: string
+  endTime: string
+  purpose: string
+}
