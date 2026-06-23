@@ -62,6 +62,19 @@ export default function Login() {
 
         {/* right form */}
         <div style={{ flex: 1, padding: '56px 80px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: '#fff', minWidth: 340 }}>
+          <button
+            type="button"
+            onClick={() => nav('/')}
+            title="Retour à l'accueil"
+            style={{ alignSelf: 'flex-start', background: 'none', border: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'Montserrat', fontWeight: 700, fontSize: 14, color: 'var(--navy)', marginBottom: 26 }}
+          >
+            <span style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--red)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 7px rgba(251,45,28,.35)' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M5 12l7 7M5 12l7-7" />
+              </svg>
+            </span>
+            Retour à l'accueil
+          </button>
           <div style={{ display: 'flex', gap: 30, borderBottom: '1px solid var(--border)', marginBottom: 34 }}>
             <button
               type="button"
