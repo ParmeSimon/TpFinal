@@ -11,9 +11,25 @@ import java.util.List;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface RoomMapper {
 
+    @Mapping(target = "currentlyBooked", ignore = true)
     RoomDTO toDto(Room room);
 
     List<RoomDTO> toDtoList(List<Room> rooms);
+
+    default RoomDTO toDto(Room room, boolean currentlyBooked) {
+        RoomDTO base = toDto(room);
+        return new RoomDTO(
+                base.id(),
+                base.name(),
+                base.capacity(),
+                base.description(),
+                base.available(),
+                currentlyBooked,
+                base.imageUrl(),
+                base.equipments(),
+                base.createdAt()
+        );
+    }
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

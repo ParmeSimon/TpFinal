@@ -38,6 +38,32 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                               @Param("statuses") Collection<BookingStatus> statuses);
 
     /**
+     * Checks whether a room currently has an active booking at the given moment.
+     */
+    @Query("""
+            SELECT COUNT(b) > 0 FROM Booking b
+            WHERE b.room.id = :roomId
+              AND b.status IN :statuses
+              AND b.startTime <= :now
+              AND b.endTime > :now
+            """)
+    boolean existsActiveAt(@Param("roomId") Long roomId,
+                           @Param("now") LocalDateTime now,
+                           @Param("statuses") Collection<BookingStatus> statuses);
+
+    /**
+     * Returns room IDs that currently have an active booking at the given moment.
+     */
+    @Query("""
+            SELECT DISTINCT b.room.id FROM Booking b
+            WHERE b.status IN :statuses
+              AND b.startTime <= :now
+              AND b.endTime > :now
+            """)
+    List<Long> findRoomIdsActiveAt(@Param("now") LocalDateTime now,
+                                   @Param("statuses") Collection<BookingStatus> statuses);
+
+    /**
      * Same overlap check but ignoring one booking (used when editing it).
      */
     @Query("""

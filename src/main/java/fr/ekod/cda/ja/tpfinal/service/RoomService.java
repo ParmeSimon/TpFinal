@@ -2,9 +2,11 @@ package fr.ekod.cda.ja.tpfinal.service;
 
 import fr.ekod.cda.ja.tpfinal.dto.room.CreateRoomDTO;
 import fr.ekod.cda.ja.tpfinal.dto.room.RoomDTO;
+import fr.ekod.cda.ja.tpfinal.entity.BookingStatus;
 import fr.ekod.cda.ja.tpfinal.entity.Equipment;
 import fr.ekod.cda.ja.tpfinal.entity.Room;
 import fr.ekod.cda.ja.tpfinal.mapper.RoomMapper;
+import fr.ekod.cda.ja.tpfinal.repository.BookingRepository;
 import fr.ekod.cda.ja.tpfinal.repository.EquipmentRepository;
 import fr.ekod.cda.ja.tpfinal.repository.RoomRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -12,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,20 +23,32 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class RoomService {
 
+    private static final Set<BookingStatus> ACTIVE_STATUSES = Set.of(BookingStatus.PENDING, BookingStatus.CONFIRMED);
+
     private final RoomRepository roomRepository;
     private final EquipmentRepository equipmentRepository;
+    private final BookingRepository bookingRepository;
     private final RoomMapper roomMapper;
 
     public List<RoomDTO> findAll() {
-        return roomMapper.toDtoList(roomRepository.findAll());
+        return decorate(roomRepository.findAll());
     }
 
     public List<RoomDTO> findAvailable() {
-        return roomMapper.toDtoList(roomRepository.findByAvailableTrue());
+        return decorate(roomRepository.findByAvailableTrue());
     }
 
     public RoomDTO findById(Long id) {
-        return roomMapper.toDto(getRoomOrThrow(id));
+        Room room = getRoomOrThrow(id);
+        boolean booked = bookingRepository.existsActiveAt(room.getId(), LocalDateTime.now(), ACTIVE_STATUSES);
+        return roomMapper.toDto(room, booked);
+    }
+
+    private List<RoomDTO> decorate(List<Room> rooms) {
+        Set<Long> bookedIds = new HashSet<>(bookingRepository.findRoomIdsActiveAt(LocalDateTime.now(), ACTIVE_STATUSES));
+        return rooms.stream()
+                .map(r -> roomMapper.toDto(r, bookedIds.contains(r.getId())))
+                .toList();
     }
 
     @Transactional
