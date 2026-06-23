@@ -36,6 +36,9 @@ public class Booking {
     @Column(length = 255)
     private String purpose;
 
+    @Column(name = "attendees")
+    private Integer attendees;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private BookingStatus status = BookingStatus.PENDING;

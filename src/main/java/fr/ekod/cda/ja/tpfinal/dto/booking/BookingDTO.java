@@ -11,6 +11,7 @@ public record BookingDTO(
         LocalDateTime startTime,
         LocalDateTime endTime,
         String purpose,
+        Integer attendees,
         String status,
         LocalDateTime createdAt
 ) {}

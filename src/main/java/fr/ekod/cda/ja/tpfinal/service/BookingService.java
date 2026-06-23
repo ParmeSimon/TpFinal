@@ -2,6 +2,7 @@ package fr.ekod.cda.ja.tpfinal.service;
 
 import fr.ekod.cda.ja.tpfinal.dto.booking.BookingDTO;
 import fr.ekod.cda.ja.tpfinal.dto.booking.CreateBookingDTO;
+import fr.ekod.cda.ja.tpfinal.dto.booking.UpdateBookingDTO;
 import fr.ekod.cda.ja.tpfinal.entity.Booking;
 import fr.ekod.cda.ja.tpfinal.entity.BookingStatus;
 import fr.ekod.cda.ja.tpfinal.entity.Room;
@@ -69,12 +70,43 @@ public class BookingService {
             throw new RoomAlreadyBooked("La salle est déjà réservée sur ce créneau");
         }
 
+        validateAttendees(dto.attendees(), room);
+
         User user = getUserByEmailOrThrow(userEmail);
 
         Booking booking = bookingMapper.toEntity(dto);
         booking.setUser(user);
         booking.setRoom(room);
         booking.setStatus(BookingStatus.PENDING);
+
+        return bookingMapper.toDto(bookingRepository.save(booking));
+    }
+
+    @Transactional
+    public BookingDTO update(Long id, UpdateBookingDTO dto) {
+        if (!dto.endTime().isAfter(dto.startTime())) {
+            throw new IllegalArgumentException("La date de fin doit être postérieure à la date de début");
+        }
+
+        Booking booking = getBookingOrThrow(id);
+
+        Room room = roomRepository.findById(dto.roomId())
+                .orElseThrow(() -> new EntityNotFoundException("Salle introuvable: " + dto.roomId()));
+
+        boolean overlap = bookingRepository.existsOverlappingExcluding(
+                room.getId(), booking.getId(), dto.startTime(), dto.endTime(), BLOCKING_STATUSES
+        );
+        if (overlap) {
+            throw new RoomAlreadyBooked("La salle est déjà réservée sur ce créneau");
+        }
+
+        validateAttendees(dto.attendees(), room);
+
+        booking.setRoom(room);
+        booking.setStartTime(dto.startTime());
+        booking.setEndTime(dto.endTime());
+        booking.setPurpose(dto.purpose());
+        booking.setAttendees(dto.attendees());
 
         return bookingMapper.toDto(bookingRepository.save(booking));
     }
@@ -101,6 +133,13 @@ public class BookingService {
         Booking booking = getBookingOrThrow(id);
         booking.setStatus(BookingStatus.REJECTED);
         return bookingMapper.toDto(bookingRepository.save(booking));
+    }
+
+    private void validateAttendees(Integer attendees, Room room) {
+        if (attendees != null && room.getCapacity() != null && attendees > room.getCapacity()) {
+            throw new IllegalArgumentException(
+                    "Le nombre de participants (" + attendees + ") dépasse la capacité de la salle (" + room.getCapacity() + ")");
+        }
     }
 
     private Booking getBookingOrThrow(Long id) {

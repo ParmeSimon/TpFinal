@@ -46,6 +46,7 @@ export interface BookingDTO {
   startTime: string
   endTime: string
   purpose: string
+  attendees: number | null
   status: BookingStatus
   createdAt: string
 }
@@ -55,4 +56,13 @@ export interface CreateBookingDTO {
   startTime: string
   endTime: string
   purpose: string
+  attendees: number
+}
+
+export interface UpdateBookingDTO {
+  roomId: number
+  startTime: string
+  endTime: string
+  purpose: string
+  attendees: number
 }
