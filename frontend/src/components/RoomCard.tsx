@@ -1,18 +1,21 @@
 import { Link } from 'react-router-dom'
 import type { RoomDTO } from '../api/types'
+import { roomCover } from '../api/roomImages'
 
 interface Props { room: RoomDTO; variant?: 'navy' | 'red' }
 
-function stripeClass(room: RoomDTO, variant?: 'navy' | 'red') {
-  if (!room.available) return 'room-stripe-grey'
-  if (variant === 'red') return 'room-stripe-red'
-  return 'room-stripe-navy'
-}
-
-export default function RoomCard({ room, variant }: Props) {
+export default function RoomCard({ room, variant: _variant }: Props) {
+  const cover = roomCover(room)
   return (
     <div className="room-card">
-      <div className={`cover ${stripeClass(room, variant)}`}>
+      <div
+        className="cover"
+        style={{
+          backgroundImage: `linear-gradient(rgba(11,26,78,${room.available ? .15 : .55}),rgba(11,26,78,${room.available ? .55 : .80})), url("${cover}")`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
         <div className="top-left">
           {room.available
             ? <span className="badge available">● Disponible</span>
