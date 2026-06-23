@@ -116,6 +116,24 @@ export default function AdminRooms() {
     catch (e: any) { setErr(e.response?.data?.message || 'Erreur') }
   }
 
+  async function toggleAvailable(r: RoomDTO) {
+    setRooms(prev => prev.map(x => x.id === r.id ? { ...x, available: !x.available } : x))
+    try {
+      await updateRoom(r.id, {
+        name: r.name,
+        description: r.description ?? '',
+        capacity: r.capacity,
+        imageUrl: r.imageUrl ?? '',
+        available: !r.available,
+        equipmentIds: [],
+      })
+      load()
+    } catch (e: any) {
+      setErr(e.response?.data?.message || 'Erreur de mise à jour')
+      load()
+    }
+  }
+
   return (
     <>
       <div className="ek-hero-red" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 12 }}>
@@ -156,7 +174,12 @@ export default function AdminRooms() {
                 <div style={{ width: 90, flex: 'none', fontWeight: 700, color: 'var(--navy)' }}>{r.capacity}</div>
                 <div style={{ flex: 1.6, color: '#6B6B7B', fontSize: 12 }}>{(r.equipments ?? []).join(' · ') || '—'}</div>
                 <div style={{ width: 110, flex: 'none' }}>
-                  <span className={`switch ${r.available ? '' : 'off'}`} style={{ pointerEvents: 'none' }} />
+                  <button
+                    type="button"
+                    className={`switch ${r.available ? '' : 'off'}`}
+                    onClick={() => toggleAvailable(r)}
+                    title={r.available ? 'Désactiver la salle (cachée aux étudiants)' : 'Réactiver la salle'}
+                  />
                 </div>
                 <div style={{ width: 90, flex: 'none', textAlign: 'right', display: 'flex', gap: 12, justifyContent: 'flex-end', color: 'var(--navy)', fontWeight: 800, fontSize: 16 }}>
                   <span onClick={() => openEdit(r)} style={{ cursor: 'pointer' }} title="Modifier">✎</span>

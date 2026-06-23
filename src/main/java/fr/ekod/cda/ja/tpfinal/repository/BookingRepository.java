@@ -18,6 +18,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByRoomId(Long roomId);
 
+    long countByStatus(BookingStatus status);
+
     /**
      * Detects a time overlap on a room. Two ranges overlap when
      * existing.startTime < newEnd AND existing.endTime > newStart.

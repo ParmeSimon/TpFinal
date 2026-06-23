@@ -15,4 +15,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     boolean existsByName(String name);
 
     List<Room> findByAvailableTrue();
+
+    long countByAvailableTrue();
 }
