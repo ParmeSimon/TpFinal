@@ -2,6 +2,7 @@ package fr.ekod.cda.ja.tpfinal.controller;
 
 import fr.ekod.cda.ja.tpfinal.dto.booking.BookingDTO;
 import fr.ekod.cda.ja.tpfinal.dto.booking.CreateBookingDTO;
+import fr.ekod.cda.ja.tpfinal.dto.booking.UpdateBookingDTO;
 import fr.ekod.cda.ja.tpfinal.service.BookingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,12 @@ public class BookingController {
     @PostMapping
     public ResponseEntity<BookingDTO> create(@Valid @RequestBody CreateBookingDTO dto, Authentication auth) {
         return ResponseEntity.status(HttpStatus.CREATED).body(bookingService.create(dto, auth.getName()));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BookingDTO> update(@PathVariable Long id, @Valid @RequestBody UpdateBookingDTO dto) {
+        return ResponseEntity.ok(bookingService.update(id, dto));
     }
 
     @PutMapping("/{id}/cancel")

@@ -114,6 +114,12 @@ export default function BookingNew() {
     if (!room || !selStart || !selEnd) {
       setErr('Sélectionnez un créneau sur le planning'); return
     }
+    if (participants < 1) {
+      setErr('Le nombre de participants doit être supérieur à 0'); return
+    }
+    if (participants > room.capacity) {
+      setErr(`Le nombre de participants (${participants}) dépasse la capacité de la salle (${room.capacity})`); return
+    }
     setSubmitting(true); setErr(null)
     try {
       await createBooking({
@@ -121,6 +127,7 @@ export default function BookingNew() {
         startTime: toIsoLocal(selStart),
         endTime: toIsoLocal(selEnd),
         purpose,
+        attendees: participants,
       })
       nav('/bookings')
     } catch (e: any) {

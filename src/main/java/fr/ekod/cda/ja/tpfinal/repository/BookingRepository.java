@@ -36,4 +36,21 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                               @Param("startTime") LocalDateTime startTime,
                               @Param("endTime") LocalDateTime endTime,
                               @Param("statuses") Collection<BookingStatus> statuses);
+
+    /**
+     * Same overlap check but ignoring one booking (used when editing it).
+     */
+    @Query("""
+            SELECT COUNT(b) > 0 FROM Booking b
+            WHERE b.room.id = :roomId
+              AND b.id <> :excludeId
+              AND b.status IN :statuses
+              AND b.startTime < :endTime
+              AND b.endTime > :startTime
+            """)
+    boolean existsOverlappingExcluding(@Param("roomId") Long roomId,
+                                       @Param("excludeId") Long excludeId,
+                                       @Param("startTime") LocalDateTime startTime,
+                                       @Param("endTime") LocalDateTime endTime,
+                                       @Param("statuses") Collection<BookingStatus> statuses);
 }
