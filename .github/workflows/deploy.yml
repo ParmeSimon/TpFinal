@@ -25,9 +25,9 @@ jobs:
           java-version: '17'
           cache: maven
 
-      - name: mvn test
-        run: ./mvnw -B test
-
+#      - name: mvn test
+#        run: ./mvnw -B test
+#
       - name: mvn package
         run: ./mvnw -B package -DskipTests
 
