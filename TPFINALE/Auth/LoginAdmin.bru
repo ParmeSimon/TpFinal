@@ -1,0 +1,33 @@
+meta {
+  name: Login Admin
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{adminEmail}}",
+    "password": "{{adminPassword}}"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setEnvVar("adminAccessToken", res.getBody().accessToken);
+  }
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("admin accessToken stored", function() {
+    expect(res.getBody().accessToken).to.be.a("string");
+  });
+}

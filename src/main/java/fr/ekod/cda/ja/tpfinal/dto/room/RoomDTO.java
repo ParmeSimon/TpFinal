@@ -9,6 +9,7 @@ public record RoomDTO(
         Integer capacity,
         String description,
         boolean available,
+        boolean currentlyBooked,
         String imageUrl,
         List<String> equipments,   // les noms des équipements liés
         LocalDateTime createdAt

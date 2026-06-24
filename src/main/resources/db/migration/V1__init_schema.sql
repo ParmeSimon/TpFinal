@@ -8,17 +8,11 @@ CREATE TABLE users (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE roles (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE
-);
-
 CREATE TABLE user_roles (
     user_id BIGINT NOT NULL,
-    role_id BIGINT NOT NULL,
-    PRIMARY KEY (user_id, role_id),
-    CONSTRAINT fk_user_roles_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT fk_user_roles_role FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE
+    role VARCHAR(50) NOT NULL,
+    PRIMARY KEY (user_id, role),
+    CONSTRAINT fk_user_roles_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
 CREATE TABLE rooms (
@@ -56,7 +50,7 @@ CREATE TABLE bookings (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_bookings_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE RESTRICT,
     CONSTRAINT fk_bookings_room FOREIGN KEY (room_id) REFERENCES rooms (id) ON DELETE RESTRICT,
-    CONSTRAINT chk_bookings_dates CHECK (end_time > start_time),
+    CONSTRAINT chk_bookings_dates CHECK (end_time > start_time)
 );
 
 CREATE INDEX idx_bookings_dates ON bookings (start_time, end_time);

@@ -1,0 +1,24 @@
+meta {
+  name: Get Room By Id
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/rooms/{{roomId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("id matches", function() {
+    expect(String(res.getBody().id)).to.equal(bru.getEnvVar("roomId"));
+  });
+}

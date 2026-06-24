@@ -2,6 +2,7 @@ package fr.ekod.cda.ja.tpfinal.dto.booking;
 
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
@@ -20,5 +21,8 @@ public record CreateBookingDTO(
         LocalDateTime endTime,
 
         @Size(max = 255, message = "Le motif ne doit pas dépasser 255 caractères")
-        String purpose
+        String purpose,
+
+        @Positive(message = "Le nombre de participants doit être supérieur à 0")
+        Integer attendees
 ) {}
