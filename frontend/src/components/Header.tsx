@@ -36,6 +36,7 @@ export default function Header({ admin = false }: { admin?: boolean }) {
             </button>
             <NavLink to="/admin/bookings" className={({isActive}) => isActive ? 'active' : ''}>Réservations</NavLink>
             <NavLink to="/admin/rooms" className={({isActive}) => isActive ? 'active' : ''}>Salles</NavLink>
+              <NavLink to="/admin/users" className={({isActive})=> isActive ? 'active' : ''}> Utilisateurs</NavLink>
           </>
         ) : (
           <>
