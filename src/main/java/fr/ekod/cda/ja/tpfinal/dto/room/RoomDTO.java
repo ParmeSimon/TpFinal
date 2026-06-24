@@ -1,4 +1,16 @@
 package fr.ekod.cda.ja.tpfinal.dto.room;
 
-public class RoomDTO {
-}
+import java.time.LocalDateTime;
+import java.util.List;
+
+public record RoomDTO(
+        Long id,
+        String name,
+        Integer capacity,
+        String description,
+        boolean available,
+        boolean currentlyBooked,
+        String imageUrl,
+        List<String> equipments,   // les noms des équipements liés
+        LocalDateTime createdAt
+) {}

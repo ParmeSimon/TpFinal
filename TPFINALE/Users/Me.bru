@@ -1,0 +1,33 @@
+meta {
+  name: Me
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/users/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setEnvVar("userId", res.getBody().id);
+  }
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("email matches student", function() {
+    expect(res.getBody().email).to.equal(bru.getEnvVar("studentEmail"));
+  });
+  test("roles array present", function() {
+    expect(res.getBody().roles).to.be.an("array");
+  });
+}

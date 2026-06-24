@@ -1,0 +1,24 @@
+meta {
+  name: Reject Booking (Admin)
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{baseUrl}}/api/bookings/{{bookingId}}/reject
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminAccessToken}}
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("status REJECTED", function() {
+    expect(res.getBody().status).to.equal("REJECTED");
+  });
+}

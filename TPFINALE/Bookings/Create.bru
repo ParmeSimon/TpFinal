@@ -1,0 +1,49 @@
+meta {
+  name: Create Booking
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/bookings
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+script:pre-request {
+  const start = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const end = new Date(start.getTime() + 60 * 60 * 1000);
+  bru.setVar("bookingStart", start.toISOString().substring(0, 19));
+  bru.setVar("bookingEnd", end.toISOString().substring(0, 19));
+}
+
+body:json {
+  {
+    "roomId": {{roomId}},
+    "startTime": "{{bookingStart}}",
+    "endTime": "{{bookingEnd}}",
+    "purpose": "Cours de Spring"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setEnvVar("bookingId", res.getBody().id);
+  }
+}
+
+tests {
+  test("status 201", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+  test("status PENDING", function() {
+    expect(res.getBody().status).to.equal("PENDING");
+  });
+  test("id stored", function() {
+    expect(res.getBody().id).to.be.a("number");
+  });
+}

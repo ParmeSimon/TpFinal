@@ -1,0 +1,24 @@
+meta {
+  name: Cancel My Booking
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{baseUrl}}/api/bookings/{{bookingId}}/cancel
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("status CANCELLED", function() {
+    expect(res.getBody().status).to.equal("CANCELLED");
+  });
+}

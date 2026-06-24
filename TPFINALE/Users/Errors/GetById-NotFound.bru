@@ -1,0 +1,21 @@
+meta {
+  name: User Not Found
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/users/999999
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminAccessToken}}
+}
+
+tests {
+  test("status 404", function() {
+    expect(res.getStatus()).to.equal(404);
+  });
+}

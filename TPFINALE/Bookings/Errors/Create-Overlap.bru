@@ -1,0 +1,37 @@
+meta {
+  name: Create Booking Overlap Conflict
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/bookings
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+script:pre-request {
+  const start = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const end = new Date(start.getTime() + 60 * 60 * 1000);
+  bru.setVar("bookingStart", start.toISOString().substring(0, 19));
+  bru.setVar("bookingEnd", end.toISOString().substring(0, 19));
+}
+
+body:json {
+  {
+    "roomId": {{roomId}},
+    "startTime": "{{bookingStart}}",
+    "endTime": "{{bookingEnd}}",
+    "purpose": "Should conflict"
+  }
+}
+
+tests {
+  test("status 409", function() {
+    expect(res.getStatus()).to.equal(409);
+  });
+}

@@ -1,0 +1,37 @@
+meta {
+  name: Create Booking Room Not Found
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/bookings
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+script:pre-request {
+  const start = new Date(Date.now() + 48 * 60 * 60 * 1000);
+  const end = new Date(start.getTime() + 60 * 60 * 1000);
+  bru.setVar("bookingStart", start.toISOString().substring(0, 19));
+  bru.setVar("bookingEnd", end.toISOString().substring(0, 19));
+}
+
+body:json {
+  {
+    "roomId": 999999,
+    "startTime": "{{bookingStart}}",
+    "endTime": "{{bookingEnd}}",
+    "purpose": "Ghost room"
+  }
+}
+
+tests {
+  test("status 404", function() {
+    expect(res.getStatus()).to.equal(404);
+  });
+}

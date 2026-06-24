@@ -1,0 +1,21 @@
+meta {
+  name: Booking Not Found
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/bookings/999999
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminAccessToken}}
+}
+
+tests {
+  test("status 404", function() {
+    expect(res.getStatus()).to.equal(404);
+  });
+}

@@ -1,0 +1,32 @@
+meta {
+  name: Create Room Duplicate Name
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/rooms
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminAccessToken}}
+}
+
+body:json {
+  {
+    "name": "Salle Bruno Test",
+    "capacity": 10,
+    "description": "duplicate",
+    "available": true,
+    "imageUrl": null,
+    "equipmentIds": []
+  }
+}
+
+tests {
+  test("status 400", function() {
+    expect(res.getStatus()).to.equal(400);
+  });
+}
