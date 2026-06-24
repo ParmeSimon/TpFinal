@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-export const api = axios.create({ baseURL: '/api' })
+// @ts-ignore
+export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL })
 
 api.interceptors.request.use((cfg) => {
   const token = localStorage.getItem('accessToken')
@@ -15,9 +16,6 @@ api.interceptors.response.use(
   (err) => {
     const status = err.response?.status
     const url: string = err.config?.url ?? ''
-    // 401 = token absent/invalide. 403 = Spring renvoie ça aussi quand le filtre
-    // JWT n'a pas pu peupler la SecurityContext (token expiré silencieusement).
-    // Sur ces statuts pour un endpoint protégé, on purge la session locale.
     if ((status === 401 || status === 403) && !url.startsWith('/auth/') && !url.startsWith('/public/')) {
       localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')
