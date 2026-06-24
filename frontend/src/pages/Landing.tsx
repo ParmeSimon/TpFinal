@@ -59,7 +59,6 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* red intro + stats */}
       <div style={{ background: 'var(--red)', color: '#fff', padding: '52px 40px', display: 'flex', gap: 56, alignItems: 'center', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 320 }}>
           <h2 className="heading-mont" style={{ fontSize: 32, lineHeight: 1.1, margin: '0 0 18px' }}>
@@ -85,7 +84,6 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* comment ça marche */}
       <div style={{ padding: '50px 40px 16px' }}>
         <h2 className="heading-mont" style={{ fontSize: 24, color: 'var(--navy)', margin: '0 0 28px' }}>Comment ça marche ?</h2>
         <div className="grid-3">
