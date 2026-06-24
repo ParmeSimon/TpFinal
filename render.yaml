@@ -1,0 +1,59 @@
+
+databases:
+  - name: ekod-db
+    databaseName: ekodplanner
+    user: ekodplanneruser
+    plan: free
+
+services:
+  - type: web
+    name: ekod-backend
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /api/public/stats
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: DB_HOST
+        fromDatabase:
+          name: ekod-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: ekod-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: ekod-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: ekod-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: ekod-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRATION
+        value: "900000"
+      - key: JWT_REFRESH_EXPIRATION
+        value: "604800000"
+
+  - type: web
+    name: ekod-frontend
+    runtime: docker
+    rootDir: frontend
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: BACKEND_HOST
+        fromService:
+          name: ekod-backend
+          type: web
+          property: host
