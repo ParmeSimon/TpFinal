@@ -10,6 +10,7 @@ public record UserDTO(
         String firstName,
         String lastName,
         String email,
-        Set<Role> roles
+        Set<Role> roles,
+        boolean active
 ) {
 }

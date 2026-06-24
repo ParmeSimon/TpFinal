@@ -1,10 +1,6 @@
 package fr.ekod.cda.ja.tpfinal.service;
 
-import fr.ekod.cda.ja.tpfinal.dto.auth.LoginRequestDTO;
-import fr.ekod.cda.ja.tpfinal.dto.auth.RefreshRequestDTO;
-import fr.ekod.cda.ja.tpfinal.dto.auth.RegisterRequestDTO;
-import fr.ekod.cda.ja.tpfinal.dto.auth.TokenResponseDTO;
-import fr.ekod.cda.ja.tpfinal.dto.auth.UserDTO;
+import fr.ekod.cda.ja.tpfinal.dto.auth.*;
 import fr.ekod.cda.ja.tpfinal.entity.Role;
 import fr.ekod.cda.ja.tpfinal.entity.User;
 import fr.ekod.cda.ja.tpfinal.mapper.UserMapper;
@@ -94,5 +90,27 @@ public class UserService {
 
     public List<UserDTO> findAll() {
         return userRepository.findAll().stream().map(userMapper::toDto).toList();
+    }
+
+    @Transactional
+    public UserDTO update(Long id, UpdateUserDTO dto, String currentEmail) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur introuvable: " + id));
+
+        boolean editingSelf = user.getEmail().equals(currentEmail);
+
+        if (editingSelf) {
+            if (!dto.roles().contains(Role.ADMIN)) {
+                throw new IllegalArgumentException("Vous ne pouvez pas retirer votre propre rôle administrateur");
+            }
+            if (!dto.active()) {
+                throw new IllegalArgumentException("Vous ne pouvez pas désactiver votre propre compte");
+            }
+        }
+        user.setFirstName(dto.firstName());
+        user.setLastName(dto.lastName());
+        user.setRoles(dto.roles());
+        user.setActive(dto.active());
+        return userMapper.toDto(userRepository.save(user));
     }
 }

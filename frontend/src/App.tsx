@@ -10,6 +10,7 @@ import BookingNew from './pages/BookingNew'
 import MyBookings from './pages/MyBookings'
 import AdminBookings from './pages/admin/AdminBookings'
 import AdminRooms from './pages/admin/AdminRooms'
+import AdminUsers from './pages/admin/AdminUsers'
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
             <Route path="/admin" element={<Navigate to="/admin/bookings" replace />} />
             <Route path="/admin/bookings" element={<AdminBookings />} />
             <Route path="/admin/rooms" element={<AdminRooms />} />
+            <Route path="/admin/users" element={<AdminUsers/>}/>
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

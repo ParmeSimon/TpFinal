@@ -7,6 +7,7 @@ export interface UserDTO {
   firstName: string
   lastName: string
   email: string
+  active : boolean
   roles: Role[]
 }
 
@@ -66,4 +67,11 @@ export interface UpdateBookingDTO {
   endTime: string
   purpose: string
   attendees: number
+}
+
+export interface UpdateUserDTO {
+  firstName: string
+  lastName: string
+  roles: Role[]
+  active: boolean
 }
