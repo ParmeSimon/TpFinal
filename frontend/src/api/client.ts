@@ -1,7 +1,8 @@
 import axios from 'axios'
 
-// @ts-ignore
-export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL })
+// Le front appelle toujours "/api" (relatif). Un proxy se charge de rediriger
+// vers le backend : Vite en dev, nginx en prod. Le code, lui, ne change jamais.
+export const api = axios.create({ baseURL: '/api' })
 
 api.interceptors.request.use((cfg) => {
   const token = localStorage.getItem('accessToken')
