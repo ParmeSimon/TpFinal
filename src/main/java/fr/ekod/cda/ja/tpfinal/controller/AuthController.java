@@ -36,4 +36,5 @@ public class AuthController {
     public ResponseEntity<TokenResponseDTO> refresh(@Valid @RequestBody RefreshRequestDTO dto) {
         return ResponseEntity.ok(userService.refresh(dto));
     }
+
 }
