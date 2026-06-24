@@ -12,5 +12,21 @@ services:
     volumes:
       - postgres_data_tp_final:/var/lib/postgresql/data
 
+  # Backend Spring Boot (optionnel en local : tu peux aussi le lancer depuis l'IDE).
+  # Il parle à Postgres via le réseau Docker (host = "postgres", port interne 5432).
+  backend:
+    build: ./backend
+    container_name: tp_final_backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    env_file: .env
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      PORT: 8080
+    ports:
+      - "8080:8080"
+
 volumes:
   postgres_data_tp_final:
