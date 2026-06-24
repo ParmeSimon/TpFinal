@@ -14,6 +14,9 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
 
     steps:
       - uses: actions/checkout@v4
@@ -43,5 +46,6 @@ jobs:
           IMAGE_LC=$(echo "${IMAGE}" | tr '[:upper:]' '[:lower:]')
           docker build -t "$IMAGE_LC:latest" .
           docker push "$IMAGE_LC:latest"
+
       - name: Trigger Render Deploy Hook
-        run: curl -fsSL -X POST "${{secrets.RENDER_DEPLOY_HOOK }}"
+        run: curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
