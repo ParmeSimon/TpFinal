@@ -14,7 +14,5 @@ COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
 COPY --from=build /app/dist /usr/share/nginx/html
 
-ENV PORT=8080
-ENV BACKEND_HOST=localhost:8080
 
 EXPOSE 8080
