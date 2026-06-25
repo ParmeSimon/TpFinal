@@ -10,7 +10,6 @@ public record RoomDTO(
         String description,
         boolean available,
         boolean currentlyBooked,
-        String imageUrl,
         List<String> equipments,   // les noms des équipements liés
         LocalDateTime createdAt,
         List<String> photoUrls     // photos uploadées par l'admin (galerie), peut être vide

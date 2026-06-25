@@ -17,6 +17,11 @@ export interface UpdateProfileDTO {
   lastName: string
 }
 
+export interface EquipmentDTO {
+  id: number
+  name: string
+}
+
 export type RoomFileCategory = 'PHOTO' | 'DOCUMENT'
 
 export interface RoomFileDTO {
@@ -48,7 +53,6 @@ export interface RoomDTO {
   description: string
   available: boolean
   currentlyBooked: boolean
-  imageUrl: string
   equipments: string[]
   createdAt: string
   photoUrls: string[]
@@ -59,7 +63,6 @@ export interface CreateRoomDTO {
   capacity: number
   description: string
   available: boolean
-  imageUrl: string
   equipmentIds: number[]
 }
 
