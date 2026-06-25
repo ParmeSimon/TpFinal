@@ -11,6 +11,7 @@ public record UserDTO(
         String lastName,
         String email,
         Set<Role> roles,
-        boolean active
+        boolean active,
+        String avatarUrl
 ) {
 }

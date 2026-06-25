@@ -8,6 +8,7 @@ import Catalogue from './pages/Catalogue'
 import RoomDetail from './pages/RoomDetail'
 import BookingNew from './pages/BookingNew'
 import MyBookings from './pages/MyBookings'
+import Profile from './pages/Profile'
 import AdminBookings from './pages/admin/AdminBookings'
 import AdminRooms from './pages/admin/AdminRooms'
 import AdminUsers from './pages/admin/AdminUsers'
@@ -31,6 +32,7 @@ export default function App() {
           {/* Consulter ses réservations : connexion requise */}
           <Route element={<Protected><Layout /></Protected>}>
             <Route path="/bookings" element={<MyBookings />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
 
           <Route element={<Protected adminOnly><Layout admin /></Protected>}>

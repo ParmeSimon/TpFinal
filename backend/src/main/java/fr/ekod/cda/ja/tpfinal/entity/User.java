@@ -36,6 +36,9 @@ public class User {
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 
+    @Column(name = "avatar_url", columnDefinition = "TEXT")
+    private String avatarUrl;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
