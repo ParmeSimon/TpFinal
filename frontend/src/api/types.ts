@@ -53,6 +53,13 @@ export interface BookingDTO {
   createdAt: string
 }
 
+// Créneau occupé exposé publiquement (planning), sans données personnelles.
+export interface PublicBookingSlot {
+  startTime: string
+  endTime: string
+  status: BookingStatus
+}
+
 export interface CreateBookingDTO {
   roomId: number
   startTime: string

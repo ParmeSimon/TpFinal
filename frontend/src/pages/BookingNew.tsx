@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getRoom } from '../api/rooms'
-import { createBooking, listAll, listMine } from '../api/bookings'
-import type { BookingDTO, RoomDTO } from '../api/types'
+import { createBooking, listRoomSlots } from '../api/bookings'
+import type { PublicBookingSlot, RoomDTO } from '../api/types'
 import { useAuth } from '../auth/AuthContext'
 
 const HOURS = Array.from({ length: 12 }, (_, i) => 8 + i) // 8..19
@@ -45,10 +45,10 @@ const MONTHS = ['janv.', 'févr.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'ao�
 export default function BookingNew() {
   const { id } = useParams()
   const nav = useNavigate()
-  const { isAdmin } = useAuth()
+  const { user } = useAuth()
   const [room, setRoom] = useState<RoomDTO | null>(null)
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date()))
-  const [bookings, setBookings] = useState<BookingDTO[]>([])
+  const [bookings, setBookings] = useState<PublicBookingSlot[]>([])
   const [selStart, setSelStart] = useState<Date | null>(null)
   const [selEnd, setSelEnd] = useState<Date | null>(null)
   const [purpose, setPurpose] = useState('')
@@ -87,17 +87,18 @@ export default function BookingNew() {
   }, [drag, selStart, selEnd])
 
   useEffect(() => {
-    (isAdmin ? listAll() : listMine())
+    if (!id) return
+    // Planning public : créneaux occupés de la salle (visible sans connexion).
+    listRoomSlots(Number(id))
       .then(setBookings)
       .catch(() => {})
-  }, [isAdmin])
+  }, [id])
 
   const days = useMemo(() => Array.from({ length: 6 }, (_, i) => addDays(weekStart, i)), [weekStart])
 
   const roomBookings = useMemo(() => {
     if (!room) return []
     return bookings.filter(b =>
-      b.roomId === room.id &&
       (b.status === 'PENDING' || b.status === 'CONFIRMED') &&
       new Date(b.startTime) >= weekStart &&
       new Date(b.startTime) < addDays(weekStart, 7)
@@ -111,6 +112,10 @@ export default function BookingNew() {
   }
 
   async function submit() {
+    // Le planning est public, mais réserver exige une connexion.
+    if (!user) {
+      nav('/login', { state: { from: `/rooms/${id}/book` } }); return
+    }
     if (!room || !selStart || !selEnd) {
       setErr('Sélectionnez un créneau sur le planning'); return
     }
@@ -210,20 +215,20 @@ export default function BookingNew() {
                     {/* existing bookings */}
                     {roomBookings
                       .filter(b => new Date(b.startTime).toDateString() === day.toDateString())
-                      .map(b => {
+                      .map((b, bi) => {
                         const s = new Date(b.startTime), e = new Date(b.endTime)
                         const top = (s.getHours() + s.getMinutes() / 60 - 8) * ROW_PX
                         const h = ((e.getTime() - s.getTime()) / 3600000) * ROW_PX
                         const color = b.status === 'CONFIRMED' ? 'var(--green)' : 'var(--orange)'
                         return (
-                          <div key={b.id} style={{
+                          <div key={bi} style={{
                             position: 'absolute', left: 3, right: 3, top, height: h,
                             background: color, color: '#fff',
                             borderRadius: 5, padding: '6px 8px',
                             fontSize: 10.5, fontWeight: 700, overflow: 'hidden'
                           }}>
                             <div>{fmtRange(s, e)}</div>
-                            <div style={{ opacity: .92, fontWeight: 600 }}>{b.purpose || '—'}</div>
+                            <div style={{ opacity: .92, fontWeight: 600 }}>Occupé</div>
                           </div>
                         )
                       })}
@@ -341,13 +346,17 @@ export default function BookingNew() {
 
           <div className="info-msg" style={{ marginBottom: 20 }}>
             <span className="icon">ⓘ</span>
-            <span>Votre demande sera créée avec le statut <b>En attente</b> et devra être validée par un administrateur.</span>
+            <span>
+              {user
+                ? <>Votre demande sera créée avec le statut <b>En attente</b> et devra être validée par un administrateur.</>
+                : <>Vous consultez le planning librement. <b>Connectez-vous</b> pour réserver un créneau.</>}
+            </span>
           </div>
 
           {err && <div className="error-msg">{err}</div>}
 
           <button onClick={submit} className="btn btn-red btn-block" disabled={submitting} style={{ padding: 15 }}>
-            {submitting ? '...' : 'Confirmer la demande'}
+            {submitting ? '...' : user ? 'Confirmer la demande' : 'Se connecter pour réserver'}
           </button>
         </div>
       </div>
