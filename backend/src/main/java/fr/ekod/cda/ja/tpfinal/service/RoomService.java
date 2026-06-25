@@ -5,9 +5,12 @@ import fr.ekod.cda.ja.tpfinal.dto.room.RoomDTO;
 import fr.ekod.cda.ja.tpfinal.entity.BookingStatus;
 import fr.ekod.cda.ja.tpfinal.entity.Equipment;
 import fr.ekod.cda.ja.tpfinal.entity.Room;
+import fr.ekod.cda.ja.tpfinal.entity.RoomFile;
+import fr.ekod.cda.ja.tpfinal.entity.RoomFileCategory;
 import fr.ekod.cda.ja.tpfinal.mapper.RoomMapper;
 import fr.ekod.cda.ja.tpfinal.repository.BookingRepository;
 import fr.ekod.cda.ja.tpfinal.repository.EquipmentRepository;
+import fr.ekod.cda.ja.tpfinal.repository.RoomFileRepository;
 import fr.ekod.cda.ja.tpfinal.repository.RoomRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +33,7 @@ public class RoomService {
     private final RoomRepository roomRepository;
     private final EquipmentRepository equipmentRepository;
     private final BookingRepository bookingRepository;
+    private final RoomFileRepository roomFileRepository;
     private final RoomMapper roomMapper;
 
     public List<RoomDTO> findAll() {
@@ -41,13 +47,27 @@ public class RoomService {
     public RoomDTO findById(Long id) {
         Room room = getRoomOrThrow(id);
         boolean booked = bookingRepository.existsActiveAt(room.getId(), LocalDateTime.now(), ACTIVE_STATUSES);
-        return roomMapper.toDto(room, booked);
+        return roomMapper.toDto(room, booked, photoUrls(id));
     }
 
     private List<RoomDTO> decorate(List<Room> rooms) {
         Set<Long> bookedIds = new HashSet<>(bookingRepository.findRoomIdsActiveAt(LocalDateTime.now(), ACTIVE_STATUSES));
+        Map<Long, List<String>> photosByRoom = roomFileRepository
+                .findByCategoryOrderByCreatedAtAsc(RoomFileCategory.PHOTO).stream()
+                .collect(Collectors.groupingBy(
+                        f -> f.getRoom().getId(),
+                        Collectors.mapping(RoomFile::getUrl, Collectors.toList())));
         return rooms.stream()
-                .map(r -> roomMapper.toDto(r, bookedIds.contains(r.getId())))
+                .map(r -> roomMapper.toDto(r, bookedIds.contains(r.getId()),
+                        photosByRoom.getOrDefault(r.getId(), List.of())))
+                .toList();
+    }
+
+    /** URLs des photos (catégorie PHOTO) rattachées à une salle, dans l'ordre d'ajout. */
+    private List<String> photoUrls(Long roomId) {
+        return roomFileRepository
+                .findByRoomIdAndCategoryOrderByCreatedAtAsc(roomId, RoomFileCategory.PHOTO).stream()
+                .map(RoomFile::getUrl)
                 .toList();
     }
 
@@ -58,7 +78,8 @@ public class RoomService {
         }
         Room room = roomMapper.toEntity(dto);
         room.setEquipments(resolveEquipments(dto.equipmentIds()));
-        return roomMapper.toDto(roomRepository.save(room));
+        Room saved = roomRepository.save(room);
+        return roomMapper.toDto(saved, false, List.of());
     }
 
     @Transactional
@@ -69,7 +90,8 @@ public class RoomService {
         }
         roomMapper.updateRoomFromDto(dto, room);
         room.setEquipments(resolveEquipments(dto.equipmentIds()));
-        return roomMapper.toDto(roomRepository.save(room));
+        Room saved = roomRepository.save(room);
+        return roomMapper.toDto(saved, false, photoUrls(saved.getId()));
     }
 
     @Transactional

@@ -24,8 +24,14 @@ services:
       DB_HOST: postgres
       DB_PORT: 5432
       PORT: 8080
+      UPLOAD_DIR: /app/uploads
     ports:
       - "8080:8080"
+    volumes:
+      # Persiste les fichiers uploadés (avatars, photos & documents de salles)
+      # entre les redémarrages/reconstructions du conteneur.
+      - uploads_tp_final:/app/uploads
 
 volumes:
   postgres_data_tp_final:
+  uploads_tp_final:

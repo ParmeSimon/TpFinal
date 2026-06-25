@@ -12,11 +12,12 @@ import java.util.List;
 public interface RoomMapper {
 
     @Mapping(target = "currentlyBooked", ignore = true)
+    @Mapping(target = "photoUrls", ignore = true)
     RoomDTO toDto(Room room);
 
     List<RoomDTO> toDtoList(List<Room> rooms);
 
-    default RoomDTO toDto(Room room, boolean currentlyBooked) {
+    default RoomDTO toDto(Room room, boolean currentlyBooked, List<String> photoUrls) {
         RoomDTO base = toDto(room);
         return new RoomDTO(
                 base.id(),
@@ -27,7 +28,8 @@ public interface RoomMapper {
                 currentlyBooked,
                 base.imageUrl(),
                 base.equipments(),
-                base.createdAt()
+                base.createdAt(),
+                photoUrls == null ? List.of() : photoUrls
         );
     }
 

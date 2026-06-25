@@ -1,13 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getRoom } from '../api/rooms'
-import type { RoomDTO } from '../api/types'
+import { listRoomFiles } from '../api/files'
+import type { RoomDTO, RoomFileDTO } from '../api/types'
 import { roomPhotos } from '../api/roomImages'
+
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n} o`
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} Ko`
+  return `${(n / 1024 / 1024).toFixed(1)} Mo`
+}
 
 export default function RoomDetail() {
   const { id } = useParams()
   const nav = useNavigate()
   const [room, setRoom] = useState<RoomDTO | null>(null)
+  const [documents, setDocuments] = useState<RoomFileDTO[]>([])
   const [err, setErr] = useState<string | null>(null)
   const [mainIdx, setMainIdx] = useState(0)
   const [reserving, setReserving] = useState(false)
@@ -15,6 +23,9 @@ export default function RoomDetail() {
   useEffect(() => {
     if (!id) return
     getRoom(Number(id)).then(setRoom).catch(e => setErr(e.response?.data?.message || 'Salle introuvable'))
+    listRoomFiles(Number(id))
+      .then(files => setDocuments(files.filter(f => f.category === 'DOCUMENT')))
+      .catch(() => {})
   }, [id])
 
   if (err) return <div className="section-pad"><div className="error-msg">{err}</div></div>
@@ -138,6 +149,25 @@ export default function RoomDetail() {
               </div>
             ))}
           </div>
+
+          {documents.length > 0 && (
+            <div style={{ marginBottom: 28 }}>
+              <div className="heading-mont" style={{ fontSize: 13, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 12 }}>Documents &amp; consignes</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {documents.map(d => (
+                  <a key={d.id} href={d.url} target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', border: '1px solid var(--border)', borderRadius: 8, textDecoration: 'none', background: '#fff' }}>
+                    <span style={{ width: 34, height: 34, borderRadius: 7, background: 'var(--red-soft-bg)', color: 'var(--red-soft-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>📄</span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'block', fontSize: 13.5, fontWeight: 700, color: 'var(--navy)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.originalName}</span>
+                      <span style={{ fontSize: 11.5, color: 'var(--grey-1)' }}>{formatBytes(d.sizeBytes)}</span>
+                    </span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--red)' }}>Ouvrir</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
             <button

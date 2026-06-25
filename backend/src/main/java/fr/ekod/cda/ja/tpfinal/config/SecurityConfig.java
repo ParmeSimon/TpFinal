@@ -67,6 +67,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        // Fichiers uploadés (avatars, photos & documents des salles) : lecture publique.
+                        .requestMatchers(HttpMethod.GET, "/api/uploads/**").permitAll()
                         // Consultation des salles (liste, disponibilites, detail) : accessible a tous.
                         // Limite a GET -> POST/PUT/DELETE sur /api/rooms restent proteges (admin).
                         .requestMatchers(HttpMethod.GET, "/api/rooms", "/api/rooms/**").permitAll()
