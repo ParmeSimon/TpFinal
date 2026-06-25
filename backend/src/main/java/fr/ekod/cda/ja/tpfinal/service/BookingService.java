@@ -2,6 +2,7 @@ package fr.ekod.cda.ja.tpfinal.service;
 
 import fr.ekod.cda.ja.tpfinal.dto.booking.BookingDTO;
 import fr.ekod.cda.ja.tpfinal.dto.booking.CreateBookingDTO;
+import fr.ekod.cda.ja.tpfinal.dto.booking.PublicBookingSlotDTO;
 import fr.ekod.cda.ja.tpfinal.dto.booking.UpdateBookingDTO;
 import fr.ekod.cda.ja.tpfinal.entity.Booking;
 import fr.ekod.cda.ja.tpfinal.entity.BookingStatus;
@@ -40,6 +41,17 @@ public class BookingService {
     public List<BookingDTO> findByCurrentUser(String email) {
         User user = getUserByEmailOrThrow(email);
         return bookingMapper.toDtoList(bookingRepository.findByUserId(user.getId()));
+    }
+
+    /**
+     * Créneaux occupés (PENDING/CONFIRMED) d'une salle, pour le planning public.
+     * N'expose ni le réservant ni le motif.
+     */
+    public List<PublicBookingSlotDTO> findPublicSlotsByRoom(Long roomId) {
+        return bookingRepository.findByRoomId(roomId).stream()
+                .filter(b -> BLOCKING_STATUSES.contains(b.getStatus()))
+                .map(b -> new PublicBookingSlotDTO(b.getStartTime(), b.getEndTime(), b.getStatus().name()))
+                .toList();
     }
 
     public BookingDTO findById(Long id, String currentUserEmail, boolean isAdmin) {

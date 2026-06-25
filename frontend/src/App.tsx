@@ -20,15 +20,16 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
 
-          {/* Consultation des salles : publique (header/footer mais sans authentification) */}
+          {/* Consultation des salles et planning : publics (header/footer, sans authentification).
+              La réservation elle-même reste protégée : la garde se fait à la validation. */}
           <Route element={<Layout />}>
             <Route path="/rooms" element={<Catalogue />} />
             <Route path="/rooms/:id" element={<RoomDetail />} />
+            <Route path="/rooms/:id/book" element={<BookingNew />} />
           </Route>
 
-          {/* Réserver et consulter ses réservations : connexion requise */}
+          {/* Consulter ses réservations : connexion requise */}
           <Route element={<Protected><Layout /></Protected>}>
-            <Route path="/rooms/:id/book" element={<BookingNew />} />
             <Route path="/bookings" element={<MyBookings />} />
           </Route>
 

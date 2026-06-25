@@ -1,5 +1,9 @@
 import { api } from './client'
-import type { BookingDTO, CreateBookingDTO, UpdateBookingDTO } from './types'
+import type { BookingDTO, CreateBookingDTO, PublicBookingSlot, UpdateBookingDTO } from './types'
+
+// Planning public d'une salle : créneaux occupés, accessible sans connexion.
+export const listRoomSlots = (roomId: number) =>
+  api.get<PublicBookingSlot[]>(`/public/rooms/${roomId}/bookings`).then(r => r.data)
 
 export const listMine = () => api.get<BookingDTO[]>('/bookings/me').then(r => r.data)
 export const listAll = () => api.get<BookingDTO[]>('/bookings').then(r => r.data)
