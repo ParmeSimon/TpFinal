@@ -16,6 +16,8 @@ services:
     envVars:
       - key: PORT
         value: 8080
+      - key: TZ
+        value: Europe/Paris
       - key: DB_HOST
         fromDatabase:
           name: ekod-db
