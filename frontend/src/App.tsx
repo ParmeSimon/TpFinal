@@ -20,9 +20,14 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
 
-          <Route element={<Protected><Layout /></Protected>}>
+          {/* Consultation des salles : publique (header/footer mais sans authentification) */}
+          <Route element={<Layout />}>
             <Route path="/rooms" element={<Catalogue />} />
             <Route path="/rooms/:id" element={<RoomDetail />} />
+          </Route>
+
+          {/* Réserver et consulter ses réservations : connexion requise */}
+          <Route element={<Protected><Layout /></Protected>}>
             <Route path="/rooms/:id/book" element={<BookingNew />} />
             <Route path="/bookings" element={<MyBookings />} />
           </Route>
