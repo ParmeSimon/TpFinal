@@ -4,8 +4,15 @@ on:
   push:
     branches: [ master ]
 
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/parmesimon/tpfinal
+
 jobs:
-  backend:
+  build-and-deploy:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -21,34 +28,22 @@ jobs:
           java-version: '17'
           cache: maven
 
-      - name: mvn test
-        run: ./mvnw -B test
 
-      # Render (service type Git) rebuild lui-meme depuis le repo : on declenche juste son hook.
+      - name: mvn package
+        run: ./mvnw -B package -DskipTests
+
+      - name: login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: docker build & push
+        run: |
+          IMAGE_LC=$(echo "${IMAGE}" | tr '[:upper:]' '[:lower:]')
+          docker build -t "$IMAGE_LC:latest" .
+          docker push "$IMAGE_LC:latest"
+
       - name: Trigger Render Deploy Hook
         run: curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
-
-  frontend:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      # Build de verification : si le bundle ne compile pas, on ne deploie pas.
-      - name: npm ci & build
-        run: |
-          npm ci
-          npm run build
-
-      - name: Trigger Render Deploy Hook
-        run: curl -fsSL -X POST "${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}"
