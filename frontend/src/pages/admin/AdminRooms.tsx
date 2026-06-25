@@ -1,7 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createRoom, deleteRoom, listRooms, updateRoom } from '../../api/rooms'
 import { listAll } from '../../api/bookings'
-import type { BookingDTO, CreateRoomDTO, RoomDTO } from '../../api/types'
+import { listRoomFiles, uploadRoomFile, deleteRoomFile } from '../../api/files'
+import type { BookingDTO, CreateRoomDTO, RoomDTO, RoomFileDTO } from '../../api/types'
+
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n} o`
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} Ko`
+  return `${(n / 1024 / 1024).toFixed(1)} Mo`
+}
 
 const HOURS = Array.from({ length: 10 }, (_, i) => 8 + i) // 8..17 (slots up to 18h)
 const ROW_PX = 44
@@ -40,6 +47,10 @@ export default function AdminRooms() {
   const [busy, setBusy] = useState(false)
   const [planning, setPlanning] = useState<RoomDTO | null>(null)
   const [bookings, setBookings] = useState<BookingDTO[]>([])
+  const [files, setFiles] = useState<RoomFileDTO[]>([])
+  const [fileBusy, setFileBusy] = useState(false)
+  const photoInputRef = useRef<HTMLInputElement>(null)
+  const docInputRef = useRef<HTMLInputElement>(null)
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date()))
   const [now, setNow] = useState<Date>(() => new Date())
 
@@ -72,7 +83,7 @@ export default function AdminRooms() {
     )
   }, [bookings, planning, weekStart])
 
-  function openCreate() { setEdit({ ...EMPTY }); setPlanning(null); setErr(null) }
+  function openCreate() { setEdit({ ...EMPTY }); setPlanning(null); setErr(null); setFiles([]) }
   function openEdit(r: RoomDTO) {
     setEdit({
       id: r.id,
@@ -85,8 +96,45 @@ export default function AdminRooms() {
     })
     setPlanning(null)
     setErr(null)
+    setFiles([])
+    loadFiles(r.id)
   }
-  function close() { setEdit(null) }
+  function close() { setEdit(null); setFiles([]) }
+
+  async function loadFiles(roomId: number) {
+    try { setFiles(await listRoomFiles(roomId)) }
+    catch { /* la salle peut ne pas avoir de fichiers */ }
+  }
+
+  async function onUploadFile(e: React.ChangeEvent<HTMLInputElement>, category: 'PHOTO' | 'DOCUMENT') {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !edit?.id) return
+    setFileBusy(true); setErr(null)
+    try {
+      await uploadRoomFile(edit.id, file, category)
+      await loadFiles(edit.id)
+      load() // rafraîchit les covers du catalogue
+    } catch (e: any) {
+      setErr(e.response?.data?.message || "Échec de l'envoi du fichier")
+    } finally {
+      setFileBusy(false)
+    }
+  }
+
+  async function removeFile(fileId: number) {
+    if (!edit?.id || !confirm('Supprimer ce fichier ?')) return
+    setFileBusy(true); setErr(null)
+    try {
+      await deleteRoomFile(edit.id, fileId)
+      await loadFiles(edit.id)
+      load()
+    } catch (e: any) {
+      setErr(e.response?.data?.message || 'Suppression impossible')
+    } finally {
+      setFileBusy(false)
+    }
+  }
 
   async function save() {
     if (!edit) return
@@ -222,6 +270,46 @@ export default function AdminRooms() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, padding: 13, background: '#fff', border: '1px solid var(--border)', borderRadius: 8 }}>
               <button type="button" onClick={() => setEdit({ ...edit, available: !edit.available })} className={`switch ${edit.available ? '' : 'off'}`} />
               <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>Salle disponible à la réservation</span>
+            </div>
+
+            {/* ----- Fichiers : photos & documents ----- */}
+            <div style={{ marginBottom: 22 }}>
+              <label className="field-label" style={{ textTransform: 'uppercase', letterSpacing: '.04em' }}>Photos &amp; documents</label>
+              {!edit.id ? (
+                <div className="info-msg">Enregistrez d'abord la salle, puis rouvrez-la pour ajouter des photos et des documents (PDF, plans, consignes…).</div>
+              ) : (
+                <>
+                  <input ref={photoInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => onUploadFile(e, 'PHOTO')} />
+                  <input ref={docInputRef} type="file" style={{ display: 'none' }} onChange={e => onUploadFile(e, 'DOCUMENT')} />
+                  <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+                    <button type="button" className="btn btn-ghost" style={{ flex: 1, padding: '9px 0', fontSize: 11.5 }} disabled={fileBusy} onClick={() => photoInputRef.current?.click()}>
+                      + Photo
+                    </button>
+                    <button type="button" className="btn btn-ghost" style={{ flex: 1, padding: '9px 0', fontSize: 11.5 }} disabled={fileBusy} onClick={() => docInputRef.current?.click()}>
+                      + Document
+                    </button>
+                  </div>
+                  {fileBusy && <div style={{ fontSize: 12, color: 'var(--grey-1)', marginBottom: 8 }}><span className="spinner" />&nbsp; Traitement…</div>}
+
+                  {files.length === 0 && !fileBusy && (
+                    <div style={{ fontSize: 12, color: 'var(--grey-1)' }}>Aucun fichier pour le moment.</div>
+                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {files.map(f => (
+                      <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 8, background: '#fff', border: '1px solid var(--border)', borderRadius: 8 }}>
+                        {f.category === 'PHOTO'
+                          ? <span style={{ width: 38, height: 38, borderRadius: 6, flexShrink: 0, background: `center/cover no-repeat url(${f.url})` }} />
+                          : <span style={{ width: 38, height: 38, borderRadius: 6, flexShrink: 0, background: 'var(--red-soft-bg)', color: 'var(--red-soft-fg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>📄</span>}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <a href={f.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: 'var(--navy)', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.originalName}</a>
+                          <span style={{ fontSize: 11, color: 'var(--grey-1)' }}>{f.category === 'PHOTO' ? 'Photo' : 'Document'} · {formatBytes(f.sizeBytes)}</span>
+                        </div>
+                        <span onClick={() => removeFile(f.id)} title="Supprimer" style={{ cursor: 'pointer', color: 'var(--red-soft-fg)', fontSize: 15, padding: '0 4px' }}>🗑</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
             {err && <div className="error-msg">{err}</div>}

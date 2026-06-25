@@ -30,10 +30,13 @@ const PHOTOS_BY_NAME: Record<string, string[]> = {
 // Photo affichée si la salle n'a pas d'entrée ci-dessus.
 const FALLBACK = '/assets/SALLEA_1.jpg'
 
-export function roomPhotos(room: { name: string }): string[] {
+// Les photos uploadées par l'admin (room.photoUrls) ont la priorité. À défaut, on
+// retombe sur le mapping statique par nom, puis sur l'image générique.
+export function roomPhotos(room: { name: string; photoUrls?: string[] }): string[] {
+  if (room.photoUrls && room.photoUrls.length > 0) return room.photoUrls
   return PHOTOS_BY_NAME[room.name] ?? [FALLBACK]
 }
 
-export function roomCover(room: RoomDTO | { name: string }): string {
+export function roomCover(room: RoomDTO | { name: string; photoUrls?: string[] }): string {
   return roomPhotos(room)[0]
 }

@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -30,6 +31,7 @@ public class UserService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final CustomUserDetailsService userDetailsService;
+    private final StorageService storageService;
 
     @Transactional
     public UserDTO register(RegisterRequestDTO dto) {
@@ -92,16 +94,46 @@ public class UserService {
         return userRepository.findAll().stream().map(userMapper::toDto).toList();
     }
 
-    /** Mise à jour par l'utilisateur de son propre profil (nom, prénom, photo). */
+    /** Mise à jour par l'utilisateur de son propre profil (nom, prénom). */
     @Transactional
     public UserDTO updateOwnProfile(String email, UpdateProfileDTO dto) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur introuvable: " + email));
         user.setFirstName(dto.firstName());
         user.setLastName(dto.lastName());
-        String avatar = dto.avatarUrl();
-        user.setAvatarUrl(avatar != null && avatar.isBlank() ? null : avatar);
         return userMapper.toDto(userRepository.save(user));
+    }
+
+    /** Upload de la photo de profil : remplace l'éventuelle ancienne et renvoie le profil à jour. */
+    @Transactional
+    public UserDTO updateOwnAvatar(String email, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Aucun fichier reçu");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("La photo de profil doit être une image");
+        }
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur introuvable: " + email));
+        String oldAvatar = user.getAvatarUrl();
+        String url = storageService.store(file, "avatars");
+        user.setAvatarUrl(url);
+        UserDTO dto = userMapper.toDto(userRepository.save(user));
+        storageService.delete(oldAvatar); // nettoyage de l'ancien fichier après succès
+        return dto;
+    }
+
+    /** Suppression de la photo de profil. */
+    @Transactional
+    public UserDTO removeOwnAvatar(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur introuvable: " + email));
+        String oldAvatar = user.getAvatarUrl();
+        user.setAvatarUrl(null);
+        UserDTO dto = userMapper.toDto(userRepository.save(user));
+        storageService.delete(oldAvatar);
+        return dto;
     }
 
     /** Changement de mot de passe : exige et vérifie le mot de passe actuel. */

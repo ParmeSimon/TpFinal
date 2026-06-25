@@ -4,9 +4,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
- * Mise à jour par l'utilisateur de son propre profil.
+ * Mise à jour par l'utilisateur de son propre profil (identité).
  * Ne touche ni au rôle, ni à l'activation, ni à l'email (réservés à l'admin).
- * {@code avatarUrl} est une data URL (image redimensionnée côté client) ou null pour aucune photo.
+ * La photo est gérée séparément via l'upload de fichier ({@code /users/me/avatar}).
  */
 public record UpdateProfileDTO(
 
@@ -16,9 +16,6 @@ public record UpdateProfileDTO(
 
         @NotBlank(message = "Le nom est obligatoire")
         @Size(max = 40, message = "Le nom ne doit pas dépasser 40 caractères")
-        String lastName,
-
-        @Size(max = 1_500_000, message = "L'image est trop volumineuse")
-        String avatarUrl
+        String lastName
 
 ) {}

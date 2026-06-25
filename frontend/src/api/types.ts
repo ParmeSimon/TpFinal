@@ -15,7 +15,18 @@ export interface UserDTO {
 export interface UpdateProfileDTO {
   firstName: string
   lastName: string
-  avatarUrl: string | null
+}
+
+export type RoomFileCategory = 'PHOTO' | 'DOCUMENT'
+
+export interface RoomFileDTO {
+  id: number
+  url: string
+  originalName: string
+  contentType: string | null
+  sizeBytes: number
+  category: RoomFileCategory
+  createdAt: string
 }
 
 export interface ChangePasswordDTO {
@@ -40,6 +51,7 @@ export interface RoomDTO {
   imageUrl: string
   equipments: string[]
   createdAt: string
+  photoUrls: string[]
 }
 
 export interface CreateRoomDTO {
