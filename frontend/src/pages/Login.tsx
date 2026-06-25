@@ -151,19 +151,6 @@ export default function Login() {
                 }}
               >{showPwd ? 'Masquer' : 'Afficher'}</button>
             </div>
-
-            {mode === 'login' && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28, fontSize: 12.5 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#5C5C6A', fontWeight: 600 }}>
-                  <input type="checkbox" style={{ width: 16, height: 16, accentColor: 'var(--red)' }} />
-                  Se souvenir de moi
-                </label>
-                <span style={{ color: 'var(--red)', fontWeight: 700, cursor: 'pointer' }}>Mot de passe oublié ?</span>
-              </div>
-            )}
-
-            {err && <div className="error-msg">{err}</div>}
-
             <button type="submit" className="btn btn-red btn-block" disabled={busy} style={{ marginTop: mode === 'register' ? 22 : 0, padding: 15 }}>
               {busy ? '...' : (mode === 'login' ? 'Se connecter' : "Créer mon compte")}
             </button>
