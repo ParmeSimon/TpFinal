@@ -1,32 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { updateProfile, changePassword } from '../api/users'
-
-// Redimensionne l'image choisie en un carré 256x256 et renvoie une data URL JPEG
-// légère : on évite ainsi de stocker des fichiers volumineux côté serveur.
-function fileToAvatarDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onerror = () => reject(new Error('Lecture du fichier impossible'))
-    reader.onload = () => {
-      const img = new Image()
-      img.onerror = () => reject(new Error('Image invalide'))
-      img.onload = () => {
-        const SIZE = 256
-        const canvas = document.createElement('canvas')
-        canvas.width = SIZE; canvas.height = SIZE
-        const ctx = canvas.getContext('2d')!
-        const side = Math.min(img.width, img.height)
-        const sx = (img.width - side) / 2
-        const sy = (img.height - side) / 2
-        ctx.drawImage(img, sx, sy, side, side, 0, 0, SIZE, SIZE)
-        resolve(canvas.toDataURL('image/jpeg', 0.85))
-      }
-      img.src = reader.result as string
-    }
-    reader.readAsDataURL(file)
-  })
-}
+import { uploadAvatar, deleteAvatar } from '../api/files'
 
 function Avatar({ src, initials, size = 96 }: { src: string | null; initials: string; size?: number }) {
   return (
@@ -51,10 +26,13 @@ export default function Profile() {
   // --- Informations personnelles ---
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [savingInfo, setSavingInfo] = useState(false)
   const [infoErr, setInfoErr] = useState<string | null>(null)
   const [infoOk, setInfoOk] = useState(false)
+
+  // --- Photo (upload immédiat) ---
+  const [avatarBusy, setAvatarBusy] = useState(false)
+  const [avatarErr, setAvatarErr] = useState<string | null>(null)
 
   // --- Mot de passe ---
   const [currentPassword, setCurrentPassword] = useState('')
@@ -69,26 +47,39 @@ export default function Profile() {
     if (user) {
       setFirstName(user.firstName)
       setLastName(user.lastName)
-      setAvatarUrl(user.avatarUrl)
     }
   }, [user])
 
   const initials = user ? (user.firstName[0] + (user.lastName[0] ?? '')).toUpperCase() : '?'
-  const infoDirty = !!user && (
-    firstName !== user.firstName || lastName !== user.lastName || (avatarUrl ?? null) !== (user.avatarUrl ?? null)
-  )
+  const infoDirty = !!user && (firstName !== user.firstName || lastName !== user.lastName)
 
   async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     e.target.value = '' // permet de re-sélectionner le même fichier
     if (!file) return
-    setInfoErr(null); setInfoOk(false)
-    if (!file.type.startsWith('image/')) { setInfoErr('Veuillez choisir un fichier image'); return }
-    if (file.size > 5 * 1024 * 1024) { setInfoErr('Image trop lourde (5 Mo maximum)'); return }
+    setAvatarErr(null)
+    if (!file.type.startsWith('image/')) { setAvatarErr('Veuillez choisir un fichier image'); return }
+    if (file.size > 20 * 1024 * 1024) { setAvatarErr('Image trop lourde (20 Mo maximum)'); return }
+    setAvatarBusy(true)
     try {
-      setAvatarUrl(await fileToAvatarDataUrl(file))
-    } catch {
-      setInfoErr("Impossible de traiter cette image")
+      await uploadAvatar(file)
+      await reload()
+    } catch (e: any) {
+      setAvatarErr(e.response?.data?.message || "Échec de l'envoi de la photo")
+    } finally {
+      setAvatarBusy(false)
+    }
+  }
+
+  async function removeAvatar() {
+    setAvatarErr(null); setAvatarBusy(true)
+    try {
+      await deleteAvatar()
+      await reload()
+    } catch (e: any) {
+      setAvatarErr(e.response?.data?.message || 'Suppression impossible')
+    } finally {
+      setAvatarBusy(false)
     }
   }
 
@@ -96,7 +87,7 @@ export default function Profile() {
     e.preventDefault()
     setInfoErr(null); setInfoOk(false); setSavingInfo(true)
     try {
-      await updateProfile({ firstName: firstName.trim(), lastName: lastName.trim(), avatarUrl })
+      await updateProfile({ firstName: firstName.trim(), lastName: lastName.trim() })
       await reload()
       setInfoOk(true)
     } catch (e: any) {
@@ -137,23 +128,24 @@ export default function Profile() {
           <h2 className="heading-mont" style={{ margin: '0 0 4px', fontSize: 18, color: 'var(--navy)' }}>Informations personnelles</h2>
           <p style={{ margin: '0 0 22px', fontSize: 13, color: 'var(--grey-2)' }}>Votre nom et votre photo apparaissent dans l'application.</p>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 24 }}>
-            <Avatar src={avatarUrl} initials={initials} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 18 }}>
+            <Avatar src={user?.avatarUrl ?? null} initials={initials} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <input ref={fileRef} type="file" accept="image/*" onChange={onPickFile} style={{ display: 'none' }} />
-              <button type="button" className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 11.5 }} onClick={() => fileRef.current?.click()}>
-                Changer la photo
+              <button type="button" className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 11.5 }} disabled={avatarBusy} onClick={() => fileRef.current?.click()}>
+                {avatarBusy ? 'Envoi…' : (user?.avatarUrl ? 'Changer la photo' : 'Ajouter une photo')}
               </button>
-              {avatarUrl && (
-                <button type="button" onClick={() => { setAvatarUrl(null); setInfoOk(false) }}
+              {user?.avatarUrl && (
+                <button type="button" onClick={removeAvatar} disabled={avatarBusy}
                   style={{ alignSelf: 'flex-start', background: 'none', border: 0, padding: 0, cursor: 'pointer', color: 'var(--red-soft-fg)', fontSize: 12, fontWeight: 600 }}>
                   Retirer la photo
                 </button>
               )}
             </div>
           </div>
+          {avatarErr && <div className="error-msg">{avatarErr}</div>}
 
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ display: 'flex', gap: 12, marginTop: 6 }}>
             <div style={{ flex: 1 }}>
               <label className="field-label">Prénom</label>
               <input className="input" required maxLength={40} value={firstName} onChange={e => { setFirstName(e.target.value); setInfoOk(false) }} />
