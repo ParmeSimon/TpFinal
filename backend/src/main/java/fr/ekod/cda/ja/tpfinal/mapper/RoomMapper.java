@@ -26,7 +26,6 @@ public interface RoomMapper {
                 base.description(),
                 base.available(),
                 currentlyBooked,
-                base.imageUrl(),
                 base.equipments(),
                 base.createdAt(),
                 photoUrls == null ? List.of() : photoUrls

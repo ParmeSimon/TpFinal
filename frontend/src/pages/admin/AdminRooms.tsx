@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createRoom, deleteRoom, listRooms, updateRoom } from '../../api/rooms'
 import { listAll } from '../../api/bookings'
 import { listRoomFiles, uploadRoomFile, deleteRoomFile } from '../../api/files'
-import type { BookingDTO, CreateRoomDTO, RoomDTO, RoomFileDTO } from '../../api/types'
+import { listEquipments, createEquipment } from '../../api/equipments'
+import type { BookingDTO, CreateRoomDTO, RoomDTO, RoomFileDTO, EquipmentDTO } from '../../api/types'
 
 function formatBytes(n: number): string {
   if (n < 1024) return `${n} o`
@@ -33,12 +34,11 @@ interface EditState {
   name: string
   description: string
   capacity: number
-  imageUrl: string
   available: boolean
-  equipmentsText: string
+  equipmentIds: number[]
 }
 
-const EMPTY: EditState = { id: null, name: '', description: '', capacity: 10, imageUrl: '', available: true, equipmentsText: '' }
+const EMPTY: EditState = { id: null, name: '', description: '', capacity: 10, available: true, equipmentIds: [] }
 
 export default function AdminRooms() {
   const [rooms, setRooms] = useState<RoomDTO[]>([])
@@ -51,6 +51,9 @@ export default function AdminRooms() {
   const [fileBusy, setFileBusy] = useState(false)
   const photoInputRef = useRef<HTMLInputElement>(null)
   const docInputRef = useRef<HTMLInputElement>(null)
+  const [equipments, setEquipments] = useState<EquipmentDTO[]>([])
+  const [newEquip, setNewEquip] = useState('')
+  const [equipBusy, setEquipBusy] = useState(false)
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date()))
   const [now, setNow] = useState<Date>(() => new Date())
 
@@ -63,7 +66,19 @@ export default function AdminRooms() {
     try { setRooms(await listRooms()) }
     catch (e: any) { setErr(e.response?.data?.message || 'Erreur') }
   }
-  useEffect(() => { load() }, [])
+  async function loadEquipments() {
+    try { setEquipments(await listEquipments()) }
+    catch { /* liste vide si l'appel échoue */ }
+  }
+  useEffect(() => { load(); loadEquipments() }, [])
+
+  // Le backend lie les équipements par id, mais une RoomDTO n'expose que leurs noms.
+  // On retraduit donc les noms d'une salle vers les ids connus, pour pré-cocher
+  // l'édition et surtout NE PAS effacer les équipements lors d'un simple changement.
+  function idsForNames(names: string[] = []): number[] {
+    const byName = new Map(equipments.map(e => [e.name.toLowerCase(), e.id]))
+    return names.map(n => byName.get(n.toLowerCase())).filter((v): v is number => v != null)
+  }
 
   function openPlanning(r: RoomDTO) {
     setPlanning(r); setEdit(null); setErr(null)
@@ -83,23 +98,46 @@ export default function AdminRooms() {
     )
   }, [bookings, planning, weekStart])
 
-  function openCreate() { setEdit({ ...EMPTY }); setPlanning(null); setErr(null); setFiles([]) }
+  function openCreate() { setEdit({ ...EMPTY }); setPlanning(null); setErr(null); setFiles([]); setNewEquip('') }
   function openEdit(r: RoomDTO) {
     setEdit({
       id: r.id,
       name: r.name,
       description: r.description ?? '',
       capacity: r.capacity,
-      imageUrl: r.imageUrl ?? '',
       available: r.available,
-      equipmentsText: (r.equipments ?? []).join(', '),
+      equipmentIds: idsForNames(r.equipments),
     })
     setPlanning(null)
     setErr(null)
     setFiles([])
+    setNewEquip('')
     loadFiles(r.id)
   }
-  function close() { setEdit(null); setFiles([]) }
+  function close() { setEdit(null); setFiles([]); setNewEquip('') }
+
+  function toggleEquip(id: number) {
+    if (!edit) return
+    const has = edit.equipmentIds.includes(id)
+    setEdit({ ...edit, equipmentIds: has ? edit.equipmentIds.filter(x => x !== id) : [...edit.equipmentIds, id] })
+  }
+
+  async function addEquip() {
+    const name = newEquip.trim()
+    if (!name || !edit) return
+    setEquipBusy(true); setErr(null)
+    try {
+      const created = await createEquipment(name)
+      // met à jour la liste globale (sans doublon) et coche le nouvel équipement
+      setEquipments(prev => prev.some(e => e.id === created.id) ? prev : [...prev, created].sort((a, b) => a.name.localeCompare(b.name)))
+      setEdit(e => e ? { ...e, equipmentIds: e.equipmentIds.includes(created.id) ? e.equipmentIds : [...e.equipmentIds, created.id] } : e)
+      setNewEquip('')
+    } catch (e: any) {
+      setErr(e.response?.data?.message || "Impossible d'ajouter l'équipement")
+    } finally {
+      setEquipBusy(false)
+    }
+  }
 
   async function loadFiles(roomId: number) {
     try { setFiles(await listRoomFiles(roomId)) }
@@ -143,9 +181,8 @@ export default function AdminRooms() {
       name: edit.name,
       description: edit.description,
       capacity: edit.capacity,
-      imageUrl: edit.imageUrl,
       available: edit.available,
-      equipmentIds: [],
+      equipmentIds: edit.equipmentIds,
     }
     try {
       if (edit.id) await updateRoom(edit.id, dto)
@@ -171,9 +208,8 @@ export default function AdminRooms() {
         name: r.name,
         description: r.description ?? '',
         capacity: r.capacity,
-        imageUrl: r.imageUrl ?? '',
         available: !r.available,
-        equipmentIds: [],
+        equipmentIds: idsForNames(r.equipments),
       })
       load()
     } catch (e: any) {
@@ -229,9 +265,21 @@ export default function AdminRooms() {
                     title={r.available ? 'Désactiver la salle (cachée aux étudiants)' : 'Réactiver la salle'}
                   />
                 </div>
-                <div style={{ width: 90, flex: 'none', textAlign: 'right', display: 'flex', gap: 12, justifyContent: 'flex-end', color: 'var(--navy)', fontWeight: 800, fontSize: 16 }}>
-                  <span onClick={() => openEdit(r)} style={{ cursor: 'pointer' }} title="Modifier">✎</span>
-                  <span onClick={() => remove(r.id)} style={{ color: 'var(--red-soft-fg)', cursor: 'pointer' }} title="Supprimer">🗑</span>
+                <div style={{ width: 90, flex: 'none', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                  <button type="button" className="icon-btn" onClick={() => openEdit(r)} title="Modifier la salle" aria-label="Modifier">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 20h9" />
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                    </svg>
+                  </button>
+                  <button type="button" className="icon-btn icon-btn-danger" onClick={() => remove(r.id)} title="Supprimer la salle" aria-label="Supprimer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      <line x1="10" y1="11" x2="10" y2="17" />
+                      <line x1="14" y1="11" x2="14" y2="17" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             ))}
@@ -256,20 +304,59 @@ export default function AdminRooms() {
             <label className="field-label" style={{ textTransform: 'uppercase', letterSpacing: '.04em' }}>Description</label>
             <textarea className="textarea" value={edit.description} onChange={e => setEdit({ ...edit, description: e.target.value })} style={{ minHeight: 60, marginBottom: 16 }} />
 
-            <div style={{ display: 'flex', gap: 14, marginBottom: 16 }}>
-              <div style={{ flex: 1 }}>
-                <label className="field-label" style={{ textTransform: 'uppercase', letterSpacing: '.04em' }}>Capacité</label>
-                <input type="number" min={1} className="input" value={edit.capacity} onChange={e => setEdit({ ...edit, capacity: Number(e.target.value) })} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <label className="field-label" style={{ textTransform: 'uppercase', letterSpacing: '.04em' }}>Image URL</label>
-                <input className="input" placeholder="https://…" value={edit.imageUrl} onChange={e => setEdit({ ...edit, imageUrl: e.target.value })} />
-              </div>
+            <div style={{ marginBottom: 16 }}>
+              <label className="field-label" style={{ textTransform: 'uppercase', letterSpacing: '.04em' }}>Capacité</label>
+              <input type="number" min={1} className="input" value={edit.capacity} onChange={e => setEdit({ ...edit, capacity: Number(e.target.value) })} />
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, padding: 13, background: '#fff', border: '1px solid var(--border)', borderRadius: 8 }}>
               <button type="button" onClick={() => setEdit({ ...edit, available: !edit.available })} className={`switch ${edit.available ? '' : 'off'}`} />
               <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>Salle disponible à la réservation</span>
+            </div>
+
+            {/* ----- Équipements ----- */}
+            <div style={{ marginBottom: 22 }}>
+              <label className="field-label" style={{ textTransform: 'uppercase', letterSpacing: '.04em' }}>Équipements</label>
+              {equipments.length === 0 ? (
+                <div style={{ fontSize: 12, color: 'var(--grey-1)', marginBottom: 10 }}>Aucun équipement enregistré. Ajoutez-en un ci-dessous.</div>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                  {equipments.map(eq => {
+                    const on = edit.equipmentIds.includes(eq.id)
+                    return (
+                      <button
+                        key={eq.id}
+                        type="button"
+                        onClick={() => toggleEquip(eq.id)}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 6,
+                          padding: '6px 12px', borderRadius: 30, cursor: 'pointer',
+                          fontFamily: 'Mulish', fontSize: 12.5, fontWeight: 700,
+                          border: on ? '1.5px solid var(--navy)' : '1.5px solid var(--border-2)',
+                          background: on ? 'var(--navy)' : '#fff',
+                          color: on ? '#fff' : 'var(--grey-2)',
+                        }}
+                      >
+                        <span style={{ fontSize: 11 }}>{on ? '✓' : '+'}</span>{eq.name}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  className="input"
+                  placeholder="Nouvel équipement (ex. Vidéoprojecteur)"
+                  value={newEquip}
+                  maxLength={100}
+                  onChange={e => setNewEquip(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addEquip() } }}
+                  style={{ flex: 1, padding: '9px 12px', fontSize: 13 }}
+                />
+                <button type="button" className="btn btn-ghost" style={{ padding: '9px 16px', fontSize: 11.5 }} disabled={equipBusy || !newEquip.trim()} onClick={addEquip}>
+                  {equipBusy ? '...' : 'Ajouter'}
+                </button>
+              </div>
             </div>
 
             {/* ----- Fichiers : photos & documents ----- */}
