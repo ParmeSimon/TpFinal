@@ -109,7 +109,7 @@ export default function Landing() {
 
       <div style={{ padding: '36px 40px 48px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 22 }}>
-          <h2 className="heading-mont" style={{ fontSize: 24, color: 'var(--navy)', margin: 0 }}>Les salles les plus demandées</h2>
+          <h2 className="heading-mont" style={{ fontSize: 24, color: 'var(--navy)', margin: 0 }}>Les salles les plus connues</h2>
           <Link to="/rooms" style={{ fontSize: 13, color: 'var(--red)', fontWeight: 700 }}>Voir le catalogue ›</Link>
         </div>
         <div className="grid-3">
