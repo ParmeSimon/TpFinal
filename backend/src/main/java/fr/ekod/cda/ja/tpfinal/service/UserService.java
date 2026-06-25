@@ -92,6 +92,33 @@ public class UserService {
         return userRepository.findAll().stream().map(userMapper::toDto).toList();
     }
 
+    /** Mise à jour par l'utilisateur de son propre profil (nom, prénom, photo). */
+    @Transactional
+    public UserDTO updateOwnProfile(String email, UpdateProfileDTO dto) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur introuvable: " + email));
+        user.setFirstName(dto.firstName());
+        user.setLastName(dto.lastName());
+        String avatar = dto.avatarUrl();
+        user.setAvatarUrl(avatar != null && avatar.isBlank() ? null : avatar);
+        return userMapper.toDto(userRepository.save(user));
+    }
+
+    /** Changement de mot de passe : exige et vérifie le mot de passe actuel. */
+    @Transactional
+    public void changeOwnPassword(String email, ChangePasswordDTO dto) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur introuvable: " + email));
+        if (!passwordEncoder.matches(dto.currentPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Le mot de passe actuel est incorrect");
+        }
+        if (passwordEncoder.matches(dto.newPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Le nouveau mot de passe doit être différent de l'ancien");
+        }
+        user.setPassword(passwordEncoder.encode(dto.newPassword()));
+        userRepository.save(user);
+    }
+
     @Transactional
     public UserDTO update(Long id, UpdateUserDTO dto, String currentEmail) {
         User user = userRepository.findById(id)

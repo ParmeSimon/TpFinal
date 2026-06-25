@@ -1,5 +1,7 @@
 package fr.ekod.cda.ja.tpfinal.controller;
 
+import fr.ekod.cda.ja.tpfinal.dto.auth.ChangePasswordDTO;
+import fr.ekod.cda.ja.tpfinal.dto.auth.UpdateProfileDTO;
 import fr.ekod.cda.ja.tpfinal.dto.auth.UpdateUserDTO;
 import fr.ekod.cda.ja.tpfinal.dto.auth.UserDTO;
 import fr.ekod.cda.ja.tpfinal.service.UserService;
@@ -22,6 +24,17 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<UserDTO> me(Authentication auth) {
         return ResponseEntity.ok(userService.getByEmail(auth.getName()));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UserDTO> updateMe(@Valid @RequestBody UpdateProfileDTO dto, Authentication auth) {
+        return ResponseEntity.ok(userService.updateOwnProfile(auth.getName(), dto));
+    }
+
+    @PutMapping("/me/password")
+    public ResponseEntity<Void> changeMyPassword(@Valid @RequestBody ChangePasswordDTO dto, Authentication auth) {
+        userService.changeOwnPassword(auth.getName(), dto);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping

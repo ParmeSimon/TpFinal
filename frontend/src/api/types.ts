@@ -9,6 +9,18 @@ export interface UserDTO {
   email: string
   active : boolean
   roles: Role[]
+  avatarUrl: string | null
+}
+
+export interface UpdateProfileDTO {
+  firstName: string
+  lastName: string
+  avatarUrl: string | null
+}
+
+export interface ChangePasswordDTO {
+  currentPassword: string
+  newPassword: string
 }
 
 export interface TokenResponse {
