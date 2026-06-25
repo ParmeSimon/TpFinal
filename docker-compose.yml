@@ -25,6 +25,7 @@ services:
       DB_PORT: 5432
       PORT: 8080
       UPLOAD_DIR: /app/uploads
+      TZ: Europe/Paris
     ports:
       - "8080:8080"
     volumes:
