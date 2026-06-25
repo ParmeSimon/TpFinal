@@ -21,8 +21,5 @@ public record CreateRoomDTO(
 
         boolean available,
 
-        @Size(max = 255, message = "L'URL de l'image ne doit pas dépasser 255 caractères")
-        String imageUrl,
-
         List<Long> equipmentIds   // on référence des équipements existants par leur id
 ) {}

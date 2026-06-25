@@ -219,6 +219,31 @@ button { font-family: inherit; cursor: pointer; }
 .btn-lg { padding: 15px 30px; font-size: 13.5px; }
 .btn-block { display: block; width: 100%; }
 
+/* boutons d'action en icône (tableaux admin) */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border-2);
+  background: #fff;
+  color: var(--navy);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.icon-btn:hover {
+  border-color: var(--navy);
+  background: var(--grey-soft-2);
+}
+.icon-btn-danger { color: var(--red-soft-fg); }
+.icon-btn-danger:hover {
+  border-color: var(--red);
+  background: var(--red-soft-bg);
+  color: var(--red);
+}
+
 /* form */
 .input,
 .select,
