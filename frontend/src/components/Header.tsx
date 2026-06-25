@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 
 export default function Header({ admin = false }: { admin?: boolean }) {
-  const { user, isAdmin, logout } = useAuth()
+  const { user, isAdmin } = useAuth()
   const nav = useNavigate()
   const initials = user ? (user.firstName[0] + (user.lastName[0] ?? '')).toUpperCase() : '?'
   const displayName = user ? `${user.firstName} ${user.lastName[0] ?? ''}.` : 'Invité'
@@ -46,9 +46,11 @@ export default function Header({ admin = false }: { admin?: boolean }) {
           </>
         )}
         {user ? (
-          <button className={`user-chip ${admin ? 'navy' : ''}`} onClick={logout} title="Se déconnecter">
+          <button className={`user-chip ${admin ? 'navy' : ''}`} onClick={() => nav('/profile')} title="Mon profil">
             {displayName}
-            <span className="avatar">{initials}</span>
+            <span className="avatar" style={user.avatarUrl ? { background: `center/cover no-repeat url(${user.avatarUrl})` } : undefined}>
+              {!user.avatarUrl && initials}
+            </span>
           </button>
         ) : (
           <button className="user-chip" onClick={() => nav('/login')}>Connexion</button>
