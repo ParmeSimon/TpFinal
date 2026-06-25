@@ -8,15 +8,19 @@ permissions:
   contents: read
   packages: write
 
-env:
-  IMAGE: ghcr.io/parmesimon/tpfinal
-
 jobs:
-  build-and-deploy:
+  # ===========================================================================
+  #  BACKEND : package -> build image -> push GHCR -> hook Render
+  #  (pas de `mvn test` : le test charge tout le contexte Spring + une DB,
+  #   inutile en CI ; les vraies donnees sont utilisees par Render au runtime)
+  # ===========================================================================
+  backend:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
+    env:
+      IMAGE: ghcr.io/parmesimon/tpfinal
 
     steps:
       - uses: actions/checkout@v4
@@ -27,7 +31,6 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
-
 
       - name: mvn package
         run: ./mvnw -B package -DskipTests
@@ -47,3 +50,33 @@ jobs:
 
       - name: Trigger Render Deploy Hook
         run: curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+
+  # ===========================================================================
+  #  FRONTEND : build image -> push GHCR -> hook Render
+  # ===========================================================================
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      IMAGE: ghcr.io/parmesimon/tpfinal-frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: docker build & push
+        run: |
+          IMAGE_LC=$(echo "${IMAGE}" | tr '[:upper:]' '[:lower:]')
+          docker build -t "$IMAGE_LC:latest" .
+          docker push "$IMAGE_LC:latest"
+
+      - name: Trigger Render Deploy Hook
+        run: curl -fsSL -X POST "${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}"
