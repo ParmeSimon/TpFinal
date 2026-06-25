@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -35,6 +36,16 @@ public class UserController {
     public ResponseEntity<Void> changeMyPassword(@Valid @RequestBody ChangePasswordDTO dto, Authentication auth) {
         userService.changeOwnPassword(auth.getName(), dto);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(value = "/me/avatar", consumes = "multipart/form-data")
+    public ResponseEntity<UserDTO> uploadMyAvatar(@RequestParam("file") MultipartFile file, Authentication auth) {
+        return ResponseEntity.ok(userService.updateOwnAvatar(auth.getName(), file));
+    }
+
+    @DeleteMapping("/me/avatar")
+    public ResponseEntity<UserDTO> deleteMyAvatar(Authentication auth) {
+        return ResponseEntity.ok(userService.removeOwnAvatar(auth.getName()));
     }
 
     @GetMapping
