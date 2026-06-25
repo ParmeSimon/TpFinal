@@ -4,18 +4,12 @@ on:
   push:
     branches: [ master ]
 
-permissions:
-  contents: read
-  packages: write
-
 jobs:
   backend:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
-    env:
-      IMAGE: ghcr.io/parmesimon/tpfinal
 
     steps:
       - uses: actions/checkout@v4
@@ -54,24 +48,22 @@ jobs:
     defaults:
       run:
         working-directory: frontend
-    env:
-      IMAGE: ghcr.io/parmesimon/tpfinal-frontend
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: login to GHCR
-        uses: docker/login-action@v3
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: docker build & push
+      # Build de verification : si le bundle ne compile pas, on ne deploie pas.
+      - name: npm ci & build
         run: |
-          IMAGE_LC=$(echo "${IMAGE}" | tr '[:upper:]' '[:lower:]')
-          docker build -t "$IMAGE_LC:latest" .
-          docker push "$IMAGE_LC:latest"
+          npm ci
+          npm run build
 
       - name: Trigger Render Deploy Hook
         run: curl -fsSL -X POST "${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}"
