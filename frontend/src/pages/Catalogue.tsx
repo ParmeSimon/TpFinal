@@ -14,8 +14,6 @@ export default function Catalogue() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Étudiants : seules les salles activées par l'admin sont visibles.
-    // Admin : voit tout pour pouvoir réactiver une salle désactivée.
     const fetcher = isAdmin ? listRooms : listAvailable
     fetcher()
       .then(setRooms)
@@ -25,7 +23,7 @@ export default function Catalogue() {
 
   const filtered = useMemo(() => {
     return rooms.filter(r => {
-      if (onlyAvailable && !r.available) return false
+      if (onlyAvailable && r.currentlyBooked) return false
       if (minCap !== '' && r.capacity < Number(minCap)) return false
       if (q && !(r.name.toLowerCase().includes(q.toLowerCase()) || (r.description ?? '').toLowerCase().includes(q.toLowerCase()))) return false
       return true
@@ -68,12 +66,6 @@ export default function Catalogue() {
         </label>
       </div>
 
-      <div style={{ padding: '30px 40px 44px', background: 'var(--bg-app)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 20 }}>
-          <div className="heading-mont" style={{ fontSize: 18, color: 'var(--navy)' }}>{filtered.length} salle{filtered.length > 1 ? 's' : ''}</div>
-          <div style={{ fontSize: 13, color: '#8A8A95' }}>Trier par : <b style={{ color: 'var(--navy)' }}>Disponibilité</b> ▾</div>
-        </div>
-
         {err && <div className="error-msg">{err}</div>}
         {loading && <div className="center-page"><span className="spinner" />&nbsp; Chargement…</div>}
 
@@ -88,7 +80,6 @@ export default function Catalogue() {
             <RoomCard key={r.id} room={r} variant={r.capacity >= 60 ? 'red' : 'navy'} />
           ))}
         </div>
-      </div>
     </>
   )
 }
