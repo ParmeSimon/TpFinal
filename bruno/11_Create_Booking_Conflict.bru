@@ -1,0 +1,32 @@
+meta {
+  name: 11 - Create Booking (conflit créneau) → 409
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/bookings
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{userToken}}
+}
+
+body:json {
+  {
+    "roomId": {{roomId}},
+    "startTime": "{{startTime}}",
+    "endTime": "{{endTime}}",
+    "purpose": "Réunion en conflit",
+    "attendees": 3
+  }
+}
+
+tests {
+  test("status 409 Conflict (créneau déjà réservé)", function() {
+    expect(res.getStatus()).to.equal(409);
+  });
+}

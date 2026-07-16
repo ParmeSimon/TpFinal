@@ -1,0 +1,31 @@
+meta {
+  name: 08 - Create Room (user) → 403
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/rooms
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{userToken}}
+}
+
+body:json {
+  {
+    "name": "TEST Salle User Interdit",
+    "capacity": 10,
+    "available": true,
+    "equipmentIds": []
+  }
+}
+
+tests {
+  test("status 403 Forbidden pour un utilisateur sans rôle ADMIN", function() {
+    expect(res.getStatus()).to.equal(403);
+  });
+}

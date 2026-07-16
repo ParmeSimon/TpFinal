@@ -1,0 +1,21 @@
+meta {
+  name: 13 - Delete Test Room (nettoyage) → 204
+  type: http
+  seq: 13
+}
+
+delete {
+  url: {{baseUrl}}/api/rooms/{{testRoomId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{adminToken}}
+}
+
+tests {
+  test("status 204 No Content", function() {
+    expect(res.getStatus()).to.equal(204);
+  });
+}

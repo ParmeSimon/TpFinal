@@ -1,0 +1,23 @@
+meta {
+  name: 04 - Get Room Detail (public)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/rooms/{{roomId}}
+  body: none
+  auth: none
+}
+
+tests {
+  test("status 200 OK sans token", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("id correspond", function() {
+    expect(res.getBody().id).to.equal(bru.getVar("roomId"));
+  });
+  test("photoUrls est un tableau", function() {
+    expect(Array.isArray(res.getBody().photoUrls)).to.be.true;
+  });
+}

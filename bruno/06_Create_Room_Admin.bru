@@ -1,0 +1,45 @@
+meta {
+  name: 06 - Create Room (admin) → 201
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/rooms
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{adminToken}}
+}
+
+body:json {
+  {
+    "name": "TEST Salle Bruno E2E",
+    "capacity": 12,
+    "description": "Salle créée par la collection Bruno E2E",
+    "available": true,
+    "equipmentIds": []
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (body && body.id) {
+    bru.setVar("testRoomId", body.id);
+  }
+}
+
+tests {
+  test("status 201 Created", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+  test("nom de la salle correct", function() {
+    expect(res.getBody().name).to.equal("TEST Salle Bruno E2E");
+  });
+  test("id retourné", function() {
+    expect(res.getBody().id).to.be.a("number");
+  });
+}
