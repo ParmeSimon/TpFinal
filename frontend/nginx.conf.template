@@ -15,16 +15,15 @@ server {
 
     # --- API : tout ce qui commence par /api est transmis au backend (HTTPS sur Render).
     #     Le navigateur ne voit que le domaine du front -> aucun CORS.
-    #     BACKEND_HOST = nom d'hôte seul (render.yaml le câble via fromService/host,
-    #     qui ne fournit pas le schéma) -> le https:// est ajouté ici.
     location /api/ {
-        proxy_pass            https://${BACKEND_HOST};
+        proxy_pass            ${BACKEND_HOST};
         proxy_http_version    1.1;
         # Upload de fichiers (photos, PDF de consignes…) : on relève la limite
         # par défaut de nginx (1 Mo) sinon les gros fichiers renverraient 413.
         client_max_body_size  25m;
         # Pas de "proxy_set_header Host ..." : nginx met automatiquement le host
-        # extrait de proxy_pass, c'est ce qu'attend le routage de Render.
+        # extrait de proxy_pass (sans le https://). Le forcer avec ${BACKEND_HOST}
+        # mettrait "https://..." dans le header Host -> invalide, Render renverrait 404.
         proxy_set_header      X-Real-IP $remote_addr;
         proxy_set_header      X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header      X-Forwarded-Proto $scheme;

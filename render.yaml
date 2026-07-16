@@ -56,8 +56,8 @@ services:
     envVars:
       - key: PORT
         value: 8080
-      # Hôte PUBLIC du backend (sans https://, ajouté par nginx.conf.template).
-      # fromService/property: host renverrait le nom interne "ekod-backend",
-      # que nginx ne sait pas résoudre au démarrage -> URL publique en dur.
       - key: BACKEND_HOST
-        value: tpfinal-backend-9klo.onrender.com
+        fromService:
+          name: ekod-backend
+          type: web
+          property: host
