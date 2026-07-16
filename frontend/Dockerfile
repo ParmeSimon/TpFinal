@@ -27,8 +27,8 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # PORT : défaut raisonnable (Render fournit/écrase le sien au runtime).
 ENV PORT=8080
 
-# BACKEND_HOST : URL COMPLÈTE du backend, ex: https://tpfinal-backend-9klo.onrender.com
-# PAS de valeur en dur ici -> à définir dans le dashboard Render (onglet Environment)
-# du service frontend. Si elle manque au runtime, nginx ne démarrera pas.
+# BACKEND_HOST : nom d'hôte du backend SANS schéma, ex: tpfinal-backend-9klo.onrender.com
+# (le https:// est ajouté dans nginx.conf.template). Câblé automatiquement par
+# render.yaml via fromService/host. Si elle manque au runtime, nginx ne démarrera pas.
 
 EXPOSE 8080
