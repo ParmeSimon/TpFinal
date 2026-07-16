@@ -1,0 +1,30 @@
+meta {
+  name: 07 - Create Room (anonyme) → 401
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/rooms
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "TEST Salle Anon",
+    "capacity": 10,
+    "available": true,
+    "equipmentIds": []
+  }
+}
+
+tests {
+  test("status 401 Unauthorized sans token", function() {
+    expect(res.getStatus()).to.equal(401);
+  });
+}

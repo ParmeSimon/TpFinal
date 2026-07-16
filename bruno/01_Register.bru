@@ -1,0 +1,39 @@
+meta {
+  name: 01 - Register
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/auth/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:pre-request {
+  const ts = Date.now();
+  bru.setVar("testEmail", `test.bruno.${ts}@ekod.test`);
+  bru.setVar("testPassword", "TestPass1!");
+}
+
+body:json {
+  {
+    "firstName": "Test",
+    "lastName": "Bruno",
+    "email": "{{testEmail}}",
+    "password": "{{testPassword}}"
+  }
+}
+
+tests {
+  test("status 201 Created", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+  test("email retourné correspond", function() {
+    expect(res.getBody().email).to.equal(bru.getVar("testEmail"));
+  });
+}

@@ -1,0 +1,56 @@
+meta {
+  name: 10 - Create Booking → 201
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/bookings
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{userToken}}
+}
+
+script:pre-request {
+  const now = new Date();
+  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const start = new Date(tomorrow);
+  start.setHours(9, 0, 0, 0);
+  const end = new Date(tomorrow);
+  end.setHours(11, 0, 0, 0);
+  bru.setVar("startTime", start.toISOString().slice(0, 19));
+  bru.setVar("endTime", end.toISOString().slice(0, 19));
+}
+
+body:json {
+  {
+    "roomId": {{roomId}},
+    "startTime": "{{startTime}}",
+    "endTime": "{{endTime}}",
+    "purpose": "Réunion Bruno E2E",
+    "attendees": 5
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (body && body.id) {
+    bru.setVar("bookingId", body.id);
+  }
+}
+
+tests {
+  test("status 201 Created", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+  test("statut PENDING", function() {
+    expect(res.getBody().status).to.equal("PENDING");
+  });
+  test("bookingId retourné", function() {
+    expect(res.getBody().id).to.be.a("number");
+  });
+}
